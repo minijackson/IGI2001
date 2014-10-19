@@ -1,0 +1,67 @@
+\documentclass{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{listings}
+
+\definecolor{gray}{gray}{0.70}
+
+\lstset{%
+	tabsize=4,
+	basicstyle=\small\ttfamily,
+	numberstyle=\scriptsize\ttfamily
+}
+
+\lstdefinestyle{prog}{%
+	caption=Programme,
+	numbers=left,
+	frame=L,
+	language=c,
+	tabsize=4,
+	basicstyle=\small\ttfamily,
+	numberstyle=\scriptsize\ttfamily,
+	keywordstyle=\color{BlueViolet},
+	stringstyle=\color{Green},
+	commentstyle=\color{gray},
+	showstringspaces=false
+}
+
+\lstdefinestyle{output}{%
+	caption=Résultat,
+	frame=single,
+	belowcaptionskip=1\baselineskip,
+	breaklines=true
+}
+
+\author{Rémi \textsc{Nicole}}
+\title{Rapport du TP 5 d'IGI-2001}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\chapter{Exercice 1}
+\lstinputlisting[style=prog]{exo1.c}
+\lstinputlisting[style=output]{out1}
+
+\chapter{Exercice 2}
+\lstinputlisting[style=prog]{exo2.c}
+\lstinputlisting[style=output]{out2}
+
+\section{Question 1}
+Il existe un spécificateur de conversion qui affiche une variable en hexadécimal
+(soit \texttt{x} ou \texttt{X}) mais il n'existe pas de spécificateur de conversion pour
+afficher une variable en binaire.
+
+\chapter{Exercice 3}
+\lstinputlisting[style=prog]{exo3.c}
+\lstinputlisting[style=output]{out3}
+
+\chapter{Exercice 4}
+\lstinputlisting[style=prog]{exo4.c}
+\lstinputlisting[style=output]{out4}
+
+\end{document}

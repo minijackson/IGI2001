@@ -1,0 +1,87 @@
+\documentclass{report}
+
+\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{csvtools}
+
+\begin{document}
+
+\section{Exercice 1}
+
+\begin{table}[h]
+	\begin{tabular}{|l|l|c|c|}
+		\hline
+		\textbf{Type}	&\textbf{Format de printf}	&\textbf{Taille en octet}	&\textbf{Taille en bits}\\
+		\hline
+		char			&\%d						&1							&8	\\
+		\hline
+		unsigned char	&\%u						&1							&8	\\
+		\hline
+		short			&\%d						&2							&16	\\
+		\hline
+		unsigned short	&\%u						&2							&16	\\
+		\hline
+		int				&\%d						&4							&32	\\
+		\hline
+		unsigned int	&\%u						&4							&32	\\
+		\hline
+		long			&\%d						&10							&80	\\
+		\hline
+		long long		&\%lld (C99)				&10							&80	\\
+		\hline
+		float			&\%f ; \%g ; \%e			&4							&32	\\
+		\hline
+		double			&\%f ; \%g ; \%e			&10							&80 \\
+		\hline
+	\end{tabular}
+	\caption{Types.csv}
+	\label{tab:types}
+\end{table}
+
+\paragraph{}
+
+On remarque au niveau des adresses qu'elles sont codées en hexadécimal et que
+les adresses ne sont pas collées entre les variables.
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|l|c|c|c|}
+		\hline
+		\textbf{Type}	&\textbf{Adresse début}	&\textbf{Taille}	&\textbf{Adresse fin}	\\
+		\hline
+		char			&0x7fff4fb30490			&8					&0x7fff4fb30498	\\
+		\hline
+		unsigned char	&0x7fff4fb304a0			&8					&0x7fff4fb304a8	\\
+		\hline
+		short			&0x7fff4fb304b0			&16					&0x7fff4fb304c0	\\
+		\hline
+		unsigned short	&0x7fff4fb304c0			&16					&0x7fff4fb304d0	\\
+		\hline
+		int				&0x7fff4fb304d0			&32					&0x7fff4fb304f0	\\
+		\hline
+		unsigned int	&0x7fff4fb304e0			&32					&0x7fff4fb30500	\\
+		\hline
+		long			&0x7fff4fb30500			&80					&0x7fff4fb30550	\\
+		\hline
+		long long		&0x7fff4fb30510			&80					&0x7fff4fb30560	\\
+		\hline
+		float			&0x7fff4fb304f0			&32					&0x7fff4fb30510	\\
+		\hline
+		double			&0x7fff4fb30520			&80					&0x7fff4fb30570	\\
+		\hline
+	\end{tabular}
+	\caption{Adresses.csv}
+	\label{tab:addr}
+\end{table}
+
+\section{Exercice 2}
+
+Le fait que les factoriels calculés soient incorrects est dû au fait qu'il y
+ait un dépassement de capacité. Afin de palier à cela, le \texttt{long long
+unsigned int} a été utilisé. Après modifications, le factoriel le plus élevé
+calculé correctement est le factoriel 20. Afin d'afficher les factoriels de 0 à
+100, il suffit d'exécuter la commande \texttt{./exo2 \{0..100\}} où la partie
+\texttt{\{0..100\}} est interprétée par le Shell.
+
+\end{document}

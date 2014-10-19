@@ -1,0 +1,11 @@
+            Type,    Adresse début,          Taille,           Adresse fin
+            char,   0x7fff4fb30490,               8,        0x7fff4fb30498
+   unsigned char,   0x7fff4fb304a0,               8,        0x7fff4fb304a8
+           short,   0x7fff4fb304b0,              16,        0x7fff4fb304c0
+  unsigned short,   0x7fff4fb304c0,              16,        0x7fff4fb304d0
+             int,   0x7fff4fb304d0,              32,        0x7fff4fb304f0
+    unsigned int,   0x7fff4fb304e0,              32,        0x7fff4fb30500
+            long,   0x7fff4fb30500,              80,        0x7fff4fb30550
+       long long,   0x7fff4fb30510,              80,        0x7fff4fb30560
+           float,   0x7fff4fb304f0,              32,        0x7fff4fb30510
+          double,   0x7fff4fb30520,              80,        0x7fff4fb30570

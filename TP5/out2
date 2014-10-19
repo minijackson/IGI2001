@@ -1,0 +1,5 @@
+masque 1 : 65280 => ff00
+masque 2 : 255 => ff
+Poids fort de x : 3584 => e00
+Poids faible de x : 44 => 2c
+0000111000101100
