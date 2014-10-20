@@ -4,5 +4,3 @@ tags
 *.out
 *.aux
 *.log
-exo*
-!*.c
