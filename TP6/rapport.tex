@@ -5,6 +5,7 @@
 \usepackage[french]{babel}
 \usepackage[]{amsmath}
 \usepackage{amsfonts}
+\usepackage{mathrsfs}
 \usepackage[]{graphicx}
 \usepackage{fullpage}
 \usepackage[usenames,dvipsnames]{color}
@@ -219,9 +220,24 @@ Et par approximation de la racine, on obtient donc:
 	s \leq \dfrac{1.41}{r}
 \end{equation}
 
-\paragraph{} On utilise donc cette approximation afin d'avoir une étape convenable pour la
-précision du tracé du cercle. Cela fait donc encore un calcul de plus (mais
-approximé) par rapport à la méthode cartésienne.
+Ce résultat s'explique aussi par le fait que la différentielle de la
+circonférence d'un cercle est égale à:
+
+\begin{equation}
+	\partial \mathcal{C} = r\times\partial t \leq \sqrt{2}
+\end{equation}
+
+Avec $\mathcal{C}$ la circonférence du cercle et avec $\partial t = s$. Cela
+nous donne donc:
+
+\begin{equation}
+	s \leq \dfrac{\sqrt{2}}{r} \simeq \dfrac{1.41}{r}
+\end{equation}
+
+\paragraph{} On utilise donc cette approximation afin d'avoir une étape
+convenable pour la précision du tracé du cercle. Cela fait donc encore un
+calcul de plus (mais approximé) par rapport à la méthode cartésienne qui est
+dans ce cas de figure.
 
 \end{document}
 % vim: spelllang=fr:spell
