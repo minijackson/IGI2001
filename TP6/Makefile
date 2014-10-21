@@ -38,7 +38,7 @@ out4.png: exo4
 clean:
 	rm exo? out* *.pdf *.aux *.log *.out
 
-tarball:
+tarball: doc
 	tar zcvf $(notdir $(shell pwd)).tar.gz exo* out* *.pdf *.tex Makefile
 
 .PHONY: all doc clean tarball outs
