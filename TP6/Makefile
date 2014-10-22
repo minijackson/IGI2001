@@ -9,7 +9,9 @@ MATH     = -lm
 
 all: $(EXECS) exo4.bin
 
-$(%.c:%.c=%.bin): %.c
+doc: outs report
+
+$(%.c:%.c=%): %.c
 	$(CC) $(CFLAGS) $@.c -o $@.bin
 
 exo4.bin: exo4.c
@@ -17,11 +19,26 @@ exo4.bin: exo4.c
 
 report: rapport.tex
 	$(TEX) rapport.tex
+	$(TEX) rapport.tex
+
+outs: $(EXECS:exo%=out%) out4.png
+
+out1: exo1
+	./$< 10 > $@
+
+out2: exo2
+	./$< > $@
+
+out3: exo3
+	./$< 1 2 3 4 > $@
+
+out4.png: exo4
+	./exo4 & sleep 1 ; import -window `xwininfo -root -tree | grep "()  200x200" | awk '{print $$1}'` out4.png
 
 clean:
-	rm *.bin rapport.pdf rapport.aux rapport.log
+	rm *.bin out* *.pdf *.aux *.log *.out
 
-tarball:
+tarball: doc
 	tar zcvf $(notdir $(shell pwd)).tar.gz exo* out* *.pdf *.tex Makefile
 
-.PHONY: all clean tarball
+.PHONY: all doc clean tarball outs
