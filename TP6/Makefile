@@ -11,32 +11,38 @@ all: $(EXECS) exo4.bin
 
 doc: outs report
 
-$(%.c:%.c=%): %.c
-	$(CC) $(CFLAGS) $@.c -o $@.bin
+exo1.bin: exo1.c
+	$(CC) $(CFLAGS) $< -o $@
+
+exo2.bin: exo2.c
+	$(CC) $(CFLAGS) $< -o $@
+
+exo3.bin: exo3.c
+	$(CC) $(CFLAGS) $< -o $@
 
 exo4.bin: exo4.c
-	$(CC) $(CFLAGS) $< -o $@.bin $(X11LIB) $(X11FLAGS) $(MATH)
+	$(CC) $(CFLAGS) $< -o $@ $(X11LIB) $(X11FLAGS) $(MATH)
 
 report: rapport.tex
 	$(TEX) rapport.tex
 	$(TEX) rapport.tex
 
-outs: $(EXECS:exo%=out%) out4.png
+outs: $(EXECS:%.bin=%.out) exo4.out.png
 
-out1: exo1
+exo1.out: exo1.bin
 	./$< 10 > $@
 
-out2: exo2
+exo2.out: exo2.bin
 	./$< > $@
 
-out3: exo3
+exo3.out: exo3.bin
 	./$< 1 2 3 4 > $@
 
-out4.png: exo4
-	./exo4 & sleep 1 ; import -window `xwininfo -root -tree | grep "()  200x200" | awk '{print $$1}'` out4.png
+exo4.out.png: exo4.bin
+	./$< & sleep 1 ; import -window `xwininfo -root -tree | grep "()  200x200" | awk '{print $$1}'` exo4.out.png
 
 clean:
-	rm *.bin out* *.pdf *.aux *.log *.out
+	rm *.bin *.pdf *.aux *.log *.out *.tar.gz
 
 tarball: doc
 	tar zcvf $(notdir $(shell pwd)).tar.gz exo* out* *.pdf *.tex Makefile
