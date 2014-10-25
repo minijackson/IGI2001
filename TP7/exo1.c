@@ -6,13 +6,18 @@ int main() {
 	int age;
 	FILE* f = fopen("exo1.f.out", "w");
 
+	if(f == NULL) {
+		printf("Could not open file\n");
+		return 1;
+	}
+
 	while(strcmp(nom, "FIN") != 0) {
 		printf("Quel est votre nom ?\n");
-		scanf("%19s", nom);
+		scanf("%s", nom);
 		if(strcmp(nom, "FIN") == 0)
 			break;
 		printf("Quel est votre prénom ?\n");
-		scanf("%19s", prenom);
+		scanf("%s", prenom);
 		printf("Quel est votre age ?\n");
 		scanf("%i", &age);
 
