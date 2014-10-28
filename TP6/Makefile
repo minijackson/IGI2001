@@ -42,9 +42,9 @@ exo4.out.png: exo4.bin
 	./$< & sleep 1 ; import -window `xwininfo -root -tree | grep "()  200x200" | awk '{print $$1}'` exo4.out.png
 
 clean:
-	rm *.bin *.pdf *.aux *.log *.out *.tar.gz
+	rm *.bin *.pdf *.aux *.log *.out* *.tar.gz
 
 tarball: doc
-	tar zcvf $(notdir $(shell pwd)).tar.gz exo* out* *.pdf *.tex Makefile
+	tar zcvf $(notdir $(shell pwd)).tar.gz exo* *.pdf *.tex Makefile
 
 .PHONY: all doc clean tarball outs
