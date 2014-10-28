@@ -168,10 +168,10 @@ précision constante sur les deux axes. Cela entraîne aussi le fait que pour
 avoir une précision correcte sur un cercle quelque soit son rayon, il faut
 calculer le pas de la boucle \lstinline[style=prog]|for| en fonction du rayon.
 Pour cela, il faut que le différence entre deux valeurs adjacente soit
-inférieure à $\sqrt{2}$ (la diagonale d'un carré de longueur $1$). On a donc:
+inférieure à $1$ (la distance minimale entre deux pixels). On a donc:
 
 \[
-	\sqrt{{\left(x(t) - x(t+s)\right)}^2 + {\left(y(t) - y(t+s)\right)}^2} \leq \sqrt{2}
+	\sqrt{{\left(x(t) - x(t+s)\right)}^2 + {\left(y(t) - y(t+s)\right)}^2} \leq 1
 \]
 
 avec $x(t)$ et $y(t)$ les fonctions d'abscisse et d'ordonnée de l'équation
@@ -217,21 +217,21 @@ $\cos(x)$ en $1-\dfrac{x^2}{2}$. Cela donne:
 \end{align*}
 Et par approximation de la racine, on obtient donc:
 \begin{equation}
-	s \leq \dfrac{1.41}{r}
+	s \leq \dfrac{1}{r}
 \end{equation}
 
 Ce résultat s'explique aussi par le fait que la différentielle de la
 circonférence d'un cercle est égale à:
 
 \begin{equation}
-	\partial \mathcal{C} = r\times\partial t \leq \sqrt{2}
+	\partial \mathcal{C} = r\times\partial t \leq 1
 \end{equation}
 
 Avec $\mathcal{C}$ la circonférence du cercle et avec $\partial t = s$. Cela
 nous donne donc:
 
 \begin{equation}
-	s \leq \dfrac{\sqrt{2}}{r} \simeq \dfrac{1.41}{r}
+	s \leq \dfrac{1}{r}
 \end{equation}
 
 \paragraph{} On utilise donc cette approximation afin d'avoir une étape

@@ -77,8 +77,8 @@ void creeCercle(unsigned int x0, unsigned int y0,
 void creeCercleTrigo(unsigned int x0, unsigned int y0,
 					 unsigned int r, unsigned char* tab) {
 	float i;
-	// $ \Delta\big(M(t), M(t+s)\big) \leq \sqrt{2} \Leftrightarrow s \leq \cos^{-1}\left(1-\dfrac{1}{r^2}\right) \simeq \dfrac{1.41}{r}$
-	float step = 1.41 / r;
+	// $ \Delta\big(M(t), M(t+s)\big) \leq 1 \Leftrightarrow s \leq \cos^{-1}\left(1-\dfrac{1}{r^2}\right) = \dfrac{1}{r}$
+	float step = 1. / r;
 	// $t\in\left[0,2\pi\right]$
 	for(i = 0; i < 6.3; i += step) {
 		// $\begin{pmatrix}x\\y\end{pmatrix} = \begin{pmatrix}r\times\cos(t)+x_0\\r\times\sin(t)+y_0\end{pmatrix}$
