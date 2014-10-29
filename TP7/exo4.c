@@ -16,6 +16,8 @@ struct pixel {
 	unsigned char blue;
 	unsigned char green;
 	unsigned char red;
+	// Only for BMP with 32 bits per pixels
+	unsigned char alpha;
 };
 
 void affiche(Display *dpy, Window w, GC gc, struct pixel* tab,
@@ -24,10 +26,9 @@ void affiche(Display *dpy, Window w, GC gc, struct pixel* tab,
 
 	for(i = 0 ; i < width ; i++) {
 		for(j = 0 ; j < height ; j++) {
-			struct pixel* p = &tab[i + (j*height)];
+			struct pixel* p = &tab[i + (j*width)];
 
 			Colormap cmap = DefaultColormap(dpy, 0);
-			GC colorGC = XCreateGC(dpy, w, 0, 0);
 			char colorHexCode[8];
 			sprintf(colorHexCode, "#%X%X%X", p->red, p->green, p->blue);
 
@@ -35,8 +36,8 @@ void affiche(Display *dpy, Window w, GC gc, struct pixel* tab,
 			XParseColor(dpy, cmap, colorHexCode, &color);
 			XAllocColor(dpy, cmap, &color);
 
-			XSetForeground(dpy, colorGC, color.pixel);
-			XDrawPoint(dpy, w, colorGC, i, j);
+			XSetForeground(dpy, gc, color.pixel);
+			XDrawPoint(dpy, w, gc, i, j);
 		}
 	}
 
@@ -57,10 +58,10 @@ void initFromBMP(struct pixel* tab, FILE* f,
 	fseek(f, pixelStart, SEEK_SET);
 
 	// BMP starts at bottom left
-	unsigned int row = tabHeight - 1, col = 0, i = 0;
+	unsigned int row = tabHeight - 1, col = 0;
 	while (ftell(f) < pixelEnd) {
 		// Store the pixel into the tab at the right place
-		fread(&tab[col + (row*tabHeight)], bpp, 1, f);
+		fread(&tab[col + (row*tabWidth)], bpp, 1, f);
 
 		// Then go until the last column
 		col = (col == tabWidth - 1)? 0 : col + 1;
@@ -70,9 +71,7 @@ void initFromBMP(struct pixel* tab, FILE* f,
 			// And skip the padding
 			fseek(f, paddingSize, SEEK_CUR);
 		}
-		++i;
 	}
-
 }
 
 int main (int argc, char const* argv[]) {
@@ -82,7 +81,7 @@ int main (int argc, char const* argv[]) {
 		return EX_USAGE;
 	}
 
-	FILE* f = fopen(argv[1], "r");
+	FILE* f = fopen(argv[1], "rb");
 
 	// ====== Check if readable file ====== //
 	if(f == NULL) {
@@ -145,7 +144,7 @@ int main (int argc, char const* argv[]) {
 	struct pixel pic[width*height];
 
 	// ====== Read pixel array ====== //
-	initFromBMP(pic, f, pixelStart, pixelEnd, bpp, paddingSize, height, width);
+	initFromBMP(pic, f, pixelStart, pixelEnd, bpp, paddingSize, width, height);
 	fclose(f);
 
 	/* // Picture initialization */
@@ -165,7 +164,7 @@ int main (int argc, char const* argv[]) {
 	while (e.type != MapNotify)
 		XNextEvent(dpy, &e);
 
-	affiche(dpy, w, gc, pic, height, width);
+	affiche(dpy, w, gc, pic, width, height);
 	sleep(10); //on attend 10s avant de quitter
 
 	return 0;
