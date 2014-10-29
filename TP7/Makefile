@@ -1,10 +1,26 @@
-CC       = ccache gcc
-TEX      = pdflatex
-CFLAGS   = -Wall -Wextra -pedantic -pthread -std=c99 -O2
-SOURCES  = $(filter-out exo4.c,$(wildcard *.c))
-EXECS    = $(SOURCES:%.c=%.bin)
-X11LIB   = `pkg-config --libs x11`
-X11FLAGS = `pkg-config --cflags x11`
+VERSION        = DEBUG
+CC             = ccache gcc
+TEX            = pdflatex
+GENERIC_CFLAGS = -Wall -Wextra -pedantic -pthread -std=c99
+PROFILE_CFLAGS = -pg
+DEBUG_CFLAGS   = -g
+RELEASE_CFLAGS = -O2
+SOURCES        = $(filter-out exo4.c,$(wildcard *.c))
+EXECS          = $(SOURCES:%.c                         = %.bin)
+X11LIB         = `pkg-config --libs x11`
+X11FLAGS       = `pkg-config --cflags x11`
+
+ifeq "$(VERSION)" "PROFILE"
+CFLAGS = $(GENERIC_CFLAGS) $(PROFILE_CFLAGS)
+else
+ifeq "$(VERSION)" "DEBUG"
+CFLAGS = $(GENERIC_CFLAGS) $(DEBUG_CFLAGS)
+else
+ifeq "$(VERSION)" "RELEASE"
+CFLAGS = $(GENERIC_CFLAGS) $(RELEASE_CFLAGS)
+endif
+endif
+endif
 
 all: $(EXECS) exo4.bin
 
