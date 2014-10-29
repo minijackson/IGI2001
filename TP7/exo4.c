@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sysexits.h>
+#include <math.h>
 
 #ifndef DEFAULT_HEIGHT
 #define DEFAULT_HEIGHT 200
@@ -12,16 +13,18 @@
 #define DEFAULT_WIDTH 200
 #endif
 
+#define ALPHA_FIRST 0
+#define ALPHA_LAST  1
+
+typedef unsigned char byte;
+
 struct pixel {
-	unsigned char blue;
-	unsigned char green;
-	unsigned char red;
-	// Only for BMP with 32 bits per pixels
-	unsigned char alpha;
+	byte pixelBytes[4];
 };
 
 void affiche(Display *dpy, Window w, GC gc, struct pixel* tab,
-			unsigned int width, unsigned int height) {
+			unsigned int width, unsigned int height, unsigned short int red,
+			unsigned short int green, unsigned short int blue) {
 	unsigned int i , j ;
 
 	for(i = 0 ; i < width ; i++) {
@@ -30,7 +33,8 @@ void affiche(Display *dpy, Window w, GC gc, struct pixel* tab,
 
 			Colormap cmap = DefaultColormap(dpy, 0);
 			char colorHexCode[8];
-			sprintf(colorHexCode, "#%X%X%X", p->red, p->green, p->blue);
+			sprintf(colorHexCode, "#%X%X%X",
+					p->pixelBytes[red], p->pixelBytes[green], p->pixelBytes[blue]);
 
 			XColor color;
 			XParseColor(dpy, cmap, colorHexCode, &color);
@@ -53,7 +57,9 @@ void blackout(unsigned char* tab, unsigned int width, unsigned int height) {
 void initFromBMP(struct pixel* tab, FILE* f,
 					unsigned int pixelStart, unsigned int pixelEnd,
 					unsigned short int bpp, unsigned short int paddingSize,
-					unsigned int tabWidth, unsigned int tabHeight) {
+					unsigned int tabWidth, unsigned int tabHeight,
+					unsigned short int red, unsigned short int green,
+					unsigned short int blue) {
 
 	fseek(f, pixelStart, SEEK_SET);
 
@@ -72,6 +78,10 @@ void initFromBMP(struct pixel* tab, FILE* f,
 			fseek(f, paddingSize, SEEK_CUR);
 		}
 	}
+}
+
+unsigned short int colorPosition(unsigned int colorMask) {
+	return log2(pow(colorMask/255., 1/8.));
 }
 
 int main (int argc, char const* argv[]) {
@@ -127,10 +137,21 @@ int main (int argc, char const* argv[]) {
 	// Convert to bytes
 	bpp /= 8;
 
+	unsigned short int red = 2, green = 1, blue = 0, alpha = 42;
 	printf("Number of bytes per pixels: %hu\n", bpp);
-	if(bpp == 4)
-		fprintf(stderr, "Warning: Alpha channel is not supported.\n");
-	else if(bpp != 3) {
+	if(bpp == 4) {
+		fprintf(stderr, "Warning: Alpha channel will not be displayed.\n");
+		unsigned int redMask, greenMask, blueMask, alphaMask;
+		fseek(f, 0x36, SEEK_SET);
+		fread(&redMask, 4, 1, f);
+		red = colorPosition(redMask);
+		fread(&greenMask, 4, 1, f);
+		green = colorPosition(greenMask);
+		fread(&blueMask, 4, 1, f);
+		blue = colorPosition(blueMask);
+		fread(&alphaMask, 4, 1, f);
+		alpha = colorPosition(alphaMask);
+	} else if(bpp != 3) {
 		fprintf(stderr, "Error: Only RGB and RGBA file supported.\n");
 	}
 
@@ -144,7 +165,8 @@ int main (int argc, char const* argv[]) {
 	struct pixel pic[width*height];
 
 	// ====== Read pixel array ====== //
-	initFromBMP(pic, f, pixelStart, pixelEnd, bpp, paddingSize, width, height);
+	initFromBMP(pic, f, pixelStart, pixelEnd, bpp, paddingSize, width, height,
+				red, green, blue);
 	fclose(f);
 
 	/* // Picture initialization */
@@ -164,7 +186,7 @@ int main (int argc, char const* argv[]) {
 	while (e.type != MapNotify)
 		XNextEvent(dpy, &e);
 
-	affiche(dpy, w, gc, pic, width, height);
+	affiche(dpy, w, gc, pic, width, height, red, green, blue);
 	sleep(10); //on attend 10s avant de quitter
 
 	return 0;

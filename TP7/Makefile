@@ -9,6 +9,7 @@ SOURCES        = $(filter-out exo4.c,$(wildcard *.c))
 EXECS          = $(SOURCES:%.c                         = %.bin)
 X11LIB         = `pkg-config --libs x11`
 X11FLAGS       = `pkg-config --cflags x11`
+MATHFLAGS      = -lm
 
 ifeq "$(VERSION)" "PROFILE"
 CFLAGS = $(GENERIC_CFLAGS) $(PROFILE_CFLAGS)
@@ -36,7 +37,7 @@ exo3.bin: exo3.c
 	$(CC) $(CFLAGS) $< -o $@
 
 exo4.bin: exo4.c
-	$(CC) $(CFLAGS) $< -o $@ $(X11LIB) $(X11FLAGS)
+	$(CC) $(CFLAGS) $< -o $@ $(X11LIB) $(X11FLAGS) $(MATHFLAGS)
 
 report: rapport.tex
 	$(TEX) rapport.tex
