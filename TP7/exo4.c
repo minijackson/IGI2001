@@ -214,6 +214,122 @@ unsigned short int colorPosition(unsigned int colorMask) {
 	return log(colorMask/255.)/log(256);
 }
 // >>>
+// Is Alive <<<
+/*! @brief Returns 1 if the given pixel is considered "alive"
+ *
+ * A pixel is considered alive when its color is different from black
+ * @param p the pixel to be tested
+ * @param red the position of the red color code
+ * @param green the position of the green color code
+ * @param blue the position of the blue color code
+ */
+unsigned short int isAlive(struct pixel p, unsigned short int red,
+							unsigned short int green, unsigned short int blue) {
+	return !(p.pixelBytes[red] == 0 && p.pixelBytes[green] == 0
+			&& p.pixelBytes[blue] == 0);
+}
+// >>>
+// Neighbour Count <<<
+/*! @brief Count the number of "alive neighbours" surrounding a pixel
+ *
+ * It counts the number of "cells" considered "alive" of a pixel's 8
+ * surrounding locations.
+ * @param tab the array of pixels
+ * @param x the x location of the pixel
+ * @param y the y location of the pixel
+ * @param tabWidth the width of the array
+ * @param tabHeight the height of the array
+ * @param red the position of the red color code
+ * @param green the position of the green color code
+ * @param blue the position of the blue color code
+ */
+unsigned short int neighbourCount(struct pixel* tab, unsigned int x, unsigned int y,
+							unsigned int tabWidth, unsigned int tabHeight,
+							unsigned short int red, unsigned short int green,
+							unsigned short int blue) {
+	unsigned int xStart = (x == 0)? 0 : x - 1,
+				yStart = (y == 0)? 0 : y - 1,
+				xEnd = (x == tabWidth - 1)? tabWidth - 1 : x + 1,
+				yEnd = (y == tabHeight - 1)? tabHeight - 1 : y + 1;
+	unsigned short int count = 0;
+	for(unsigned int i = xStart ; i <= xEnd ; ++i)
+		for(unsigned int j = yStart ; j <= yEnd ; ++j)
+			if(isAlive(tab[i + (j * tabWidth)], red, green, blue)
+				&& !(i == x && j ==y))
+				++count;
+	return count;
+}
+// >>>
+// Mix Neighbours Colors <<<
+struct pixel mixNeighbousColors(struct pixel* tab, unsigned int x, unsigned int y,
+							unsigned int tabWidth, unsigned int tabHeight,
+							unsigned short int red, unsigned short int green,
+							unsigned short int blue) {
+    unsigned int xStart = (x == 0)? 0 : x - 1,
+                 yStart = (y == 0)? 0 : y - 1,
+                   xEnd = (x == tabWidth)? tabWidth : x + 1,
+                   yEnd = (y == tabHeight)? tabHeight : y + 1,
+                      n = 0;
+	unsigned short int count = neighbourCount(tab, x, y, tabWidth, tabHeight,
+												red, green, blue);
+	unsigned short int redMean = 0, greenMean = 0, blueMean = 0;
+
+	for(unsigned int i = xStart ; i <= xEnd ; ++i)
+		for(unsigned int j = yStart ; j <= yEnd ; ++j)
+			if(isAlive(tab[i + (j * tabWidth)], red, green, blue)) {
+				redMean   += tab[i + (j * tabWidth)].pixelBytes[red];
+				greenMean += tab[i + (j * tabWidth)].pixelBytes[green];
+				blueMean  += tab[i + (j * tabWidth)].pixelBytes[blue];
+				++n;
+			}
+
+	redMean /= count;
+	greenMean /= count;
+	blueMean /= count;
+	struct pixel mean;
+	mean.pixelBytes[red] = redMean;
+	mean.pixelBytes[green] = greenMean;
+	mean.pixelBytes[blue] = blueMean;
+	return mean;
+}
+// >>>
+// Next Step <<<
+void nextStep(struct pixel* tab, unsigned int tabWidth, unsigned int tabHeight,
+			unsigned short int red, unsigned short int green,
+			unsigned short int blue) {
+	struct pixel tabTmp[tabWidth * tabHeight];
+	// Tab in which the changes are made before applied
+	for(unsigned int i = 0 ; i < tabWidth ; i++) {
+		for(unsigned int j = 0 ; j < tabHeight ; j++) {
+			unsigned short int neighboursCount = neighbourCount(tab, i, j,
+															tabWidth, tabHeight,
+															red, green, blue);
+			if(isAlive(tab[i + (j * tabWidth)], red, green, blue)) {
+				// Loneliness and overcrowding
+				if(neighboursCount < 2 || neighboursCount > 3) {
+					tabTmp[i + (j * tabWidth)].pixelBytes[red]   = 0;
+					tabTmp[i + (j * tabWidth)].pixelBytes[green] = 0;
+					tabTmp[i + (j * tabWidth)].pixelBytes[blue]  = 0;
+				} else
+					tabTmp[i + (j * tabWidth)] = tab[i + (j * tabWidth)];
+
+			} else {
+				// Reproduction
+				if(neighboursCount == 3)
+					tabTmp[i + (j * tabWidth)] = mixNeighbousColors(tab, i, j,
+															tabWidth, tabHeight,
+															red, green, blue);
+				else {
+					tabTmp[i + (j * tabWidth)].pixelBytes[red]   = 0;
+					tabTmp[i + (j * tabWidth)].pixelBytes[green] = 0;
+					tabTmp[i + (j * tabWidth)].pixelBytes[blue]  = 0;
+				}
+			}
+		}
+	}
+	memcpy(tab, tabTmp, sizeof(struct pixel) * tabWidth * tabHeight);
+}
+// >>>
 
 int main (int argc, char const* argv[]) {
 
@@ -331,6 +447,11 @@ int main (int argc, char const* argv[]) {
 	// >>>
 
 	affiche(dpy, w, gc, pic, width, height, red, green, blue);
+	for(;;) {
+		sleep(.5);
+		nextStep(pic, width, height, red, green, blue);
+		affiche(dpy, w, gc, pic, width, height, red, green, blue);
+	}
 	sleep(5);
 
 	return 0;
