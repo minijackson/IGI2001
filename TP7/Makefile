@@ -6,7 +6,7 @@ PROFILE_CFLAGS = -pg
 DEBUG_CFLAGS   = -g
 RELEASE_CFLAGS = -O2
 SOURCES        = $(filter-out exo4.c,$(wildcard *.c))
-EXECS          = $(SOURCES:%.c                         = %.bin)
+EXECS          = $(SOURCES:%.c= %.bin)
 X11LIB         = `pkg-config --libs x11`
 X11FLAGS       = `pkg-config --cflags x11`
 MATHFLAGS      = -lm
