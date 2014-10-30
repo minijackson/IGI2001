@@ -2,8 +2,10 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <sysexits.h>
 #include <math.h>
+#include <time.h>
 
 #ifndef DEFAULT_HEIGHT
 #define DEFAULT_HEIGHT 200
@@ -48,18 +50,24 @@ void affiche(Display *dpy, Window w, GC gc, struct pixel* tab,
 	XFlush(dpy);
 }
 
-void blackout(unsigned char* tab, unsigned int width, unsigned int height) {
-	unsigned int i;
-	for(i = 0; i < width*height; i++)
-		tab[i] = 0;
+void initRandomly(struct pixel* tab,unsigned int tabWidth,
+					unsigned int tabHeight) {
+	unsigned int i,j;
+	for(i = 0 ; i < tabWidth * tabHeight ; ++i) {
+		if(rand() % 5) {
+			for(j = 0 ; j <= 3 ; ++j)
+				tab[i].pixelBytes[j] = 0;
+		} else {
+			for(j = 0 ; j <= 3 ; ++j)
+				tab[i].pixelBytes[j] = rand() % 256;
+		}
+	}
 }
 
 void initFromBMP(struct pixel* tab, FILE* f,
 					unsigned int pixelStart, unsigned int pixelEnd,
 					unsigned short int bpp, unsigned short int paddingSize,
-					unsigned int tabWidth, unsigned int tabHeight,
-					unsigned short int red, unsigned short int green,
-					unsigned short int blue) {
+					unsigned int tabWidth, unsigned int tabHeight) {
 
 	fseek(f, pixelStart, SEEK_SET);
 
@@ -81,93 +89,106 @@ void initFromBMP(struct pixel* tab, FILE* f,
 }
 
 unsigned short int colorPosition(unsigned int colorMask) {
-	return log2(pow(colorMask/255., 1/8.));
+	// $Position = \log_{256}\left(\dfrac{mask}{255}\right)$
+	return log(colorMask/255.)/log(256);
 }
 
 int main (int argc, char const* argv[]) {
+
+	FILE* f;
+	unsigned short int bpp, red = 2, green = 1, blue = 0, alpha = 42;
+	unsigned int pixelStart, pixelEnd;
+
+	srand(time(NULL));
+
 	// ====== Check command-line usage ====== //
 	if(argc != 2) {
-		fprintf(stderr, "Usage: %s file.bmp\n", argv[0]);
+		fprintf(stderr, "Usage: %s {--random | file.bmp}\n", argv[0]);
 		return EX_USAGE;
 	}
 
-	FILE* f = fopen(argv[1], "rb");
-
-	// ====== Check if readable file ====== //
-	if(f == NULL) {
-		fprintf(stderr, "Error: Could not load the file \"%s\"\n", argv[1]);
-		return EX_NOINPUT;
-	}
-
-	// ====== BMP file magic check ====== //
-	// If it really is a BMP, the first two bytes are the ASCII code of "BM"
-	char magic[3];
-	// Read the first two bytes one time starting from the 'magi'c memory block
-	fread(&magic, 2, 1, f);
-	if (!(magic[0] == 'B' && magic[1] == 'M')) {
-		fprintf(stderr, "Error: Not a BMP file\n");
-		return EX_DATAERR;
-	}
-
-	// ====== Pixel array offset ====== //
-	unsigned int pixelStart, pixelEnd;
-	fseek(f, 0xA, SEEK_SET);
-	fread(&pixelStart, 4, 1, f);
-	// Go to the end
-	fseek(f, 0, SEEK_END);
-	pixelEnd = ftell(f);
-	printf("Pixel array starts at offset: %X and ends at offset: %X\n",
-			pixelStart, pixelEnd);
-
-	// ====== Width and Height ====== //
 	unsigned int width, height;
-	// width and height located at offsets 0x12 and 0x12
-	fseek(f, 0x12, SEEK_SET);
-	// Load the width and height into the corresponding variables (4 bytes each)
-	fread(&width, 4, 1, f);
-	fread(&height, 4, 1, f);
 
-	printf("Height = %u, Width = %u\n", height, width);
+	if(strcmp(argv[1], "--random")) {
+		f = fopen(argv[1], "rb");
 
-	// ====== Bytes per pixels ====== //
-	unsigned short int bpp;
-	// The number of bytes per pixels located at offset 0x1C
-	fseek(f, 0x1C, SEEK_SET);
-	fread(&bpp, 2, 1, f);
-	// Convert to bytes
-	bpp /= 8;
+		// ====== Check if readable file ====== //
+		if(f == NULL) {
+			fprintf(stderr, "Error: Could not load the file \"%s\"\n", argv[1]);
+			return EX_NOINPUT;
+		}
 
-	unsigned short int red = 2, green = 1, blue = 0, alpha = 42;
-	printf("Number of bytes per pixels: %hu\n", bpp);
-	if(bpp == 4) {
-		fprintf(stderr, "Warning: Alpha channel will not be displayed.\n");
-		unsigned int redMask, greenMask, blueMask, alphaMask;
-		fseek(f, 0x36, SEEK_SET);
-		fread(&redMask, 4, 1, f);
-		red = colorPosition(redMask);
-		fread(&greenMask, 4, 1, f);
-		green = colorPosition(greenMask);
-		fread(&blueMask, 4, 1, f);
-		blue = colorPosition(blueMask);
-		fread(&alphaMask, 4, 1, f);
-		alpha = colorPosition(alphaMask);
-	} else if(bpp != 3) {
-		fprintf(stderr, "Error: Only RGB and RGBA file supported.\n");
+		// ====== BMP file magic check ====== //
+		// If it really is a BMP, the first two bytes are the ASCII code of "BM"
+		char magic[3];
+		// Read the first two bytes one time starting from the 'magi'c memory block
+		fread(&magic, 2, 1, f);
+		if (!(magic[0] == 'B' && magic[1] == 'M')) {
+			fprintf(stderr, "Error: Not a BMP file\n");
+			return EX_DATAERR;
+		}
+
+		// ====== Width and Height ====== //
+		// width and height located at offsets 0x12 and 0x12
+		fseek(f, 0x12, SEEK_SET);
+		// Load the width and height into the corresponding variables (4 bytes each)
+		fread(&width, 4, 1, f);
+		fread(&height, 4, 1, f);
+
+		printf("Height = %u, Width = %u\n", height, width);
+
+		// ====== Pixel array offset ====== //
+		fseek(f, 0xA, SEEK_SET);
+		fread(&pixelStart, 4, 1, f);
+		// Go to the end
+		fseek(f, 0, SEEK_END);
+		pixelEnd = ftell(f);
+		printf("Pixel array starts at offset: %X and ends at offset: %X\n",
+				pixelStart, pixelEnd);
+
+		// ====== Bytes per pixels ====== //
+		// The number of bytes per pixels located at offset 0x1C
+		fseek(f, 0x1C, SEEK_SET);
+		fread(&bpp, 2, 1, f);
+		// Convert to bytes
+		bpp /= 8;
+
+		printf("Number of bytes per pixels: %hu\n", bpp);
+		if(bpp == 4) {
+			fprintf(stderr, "Warning: Alpha channel will not be displayed.\n");
+			unsigned int redMask, greenMask, blueMask, alphaMask;
+			fseek(f, 0x36, SEEK_SET);
+			fread(&redMask, 4, 1, f);
+			red = colorPosition(redMask);
+			fread(&greenMask, 4, 1, f);
+			green = colorPosition(greenMask);
+			fread(&blueMask, 4, 1, f);
+			blue = colorPosition(blueMask);
+			fread(&alphaMask, 4, 1, f);
+			alpha = colorPosition(alphaMask);
+		} else if(bpp != 3) {
+			fprintf(stderr, "Error: Only RGB and RGBA file supported.\n");
+		}
+	} else {
+		width = DEFAULT_WIDTH, height = DEFAULT_WIDTH;
 	}
-
-	// ====== Padding Size ====== //
-
-	// There is a padding column until the row reaches a multiple of 4 bytes
-	// $bytesPerRow = rowSize \times bytesPerPixel$
-	// $paddingSize = \begin{dcases*}0 & if $bytesPerRow \% 4 = 0$\\4 - (bytesPerRow \% 4) & else\end{dcases*}$
-	unsigned short int paddingSize = (4 - ((width * bpp) % 4) ) % 4;
 
 	struct pixel pic[width*height];
 
-	// ====== Read pixel array ====== //
-	initFromBMP(pic, f, pixelStart, pixelEnd, bpp, paddingSize, width, height,
-				red, green, blue);
-	fclose(f);
+	if(strcmp(argv[1], "--random")) {
+		// ====== Padding Size ====== //
+
+		// There is a padding column until the row reaches a multiple of 4 bytes
+		// $bytesPerRow = rowSize \times bytesPerPixel$
+		// $paddingSize = \begin{dcases*}0 & if $bytesPerRow \% 4 = 0$\\4 - (bytesPerRow \% 4) & else\end{dcases*}$
+		unsigned short int paddingSize = (4 - ((width * bpp) % 4) ) % 4;
+
+		// ====== Read pixel array ====== //
+		initFromBMP(pic, f, pixelStart, pixelEnd, bpp, paddingSize, width, height);
+		fclose(f);
+	} else {
+		initRandomly(pic, width, height);
+	}
 
 	/* // Picture initialization */
 	/* blackout(pic, width, height); */
