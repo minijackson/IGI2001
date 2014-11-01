@@ -20,9 +20,11 @@
 //! @brief 16 millions colors in the RRGGBB color space
 #define COLOR_COUNT 16777216
 
-#define MODE_RANDOM 0
-#define MODE_BMP    0
-#define MODE_RLE    0
+enum programMode {
+	random,
+	bmp,
+	rle
+};
 
 typedef unsigned char byte;
 
@@ -553,10 +555,18 @@ int main (int argc, char const* argv[]) {
 	}
 	// >>>
 
+	enum programMode mode;
+	if(!strcmp(argv[1], "--random")) {
+		mode = random;
+	} else if(!strcmp(argv[1], "--bmp")) {
+		mode = bmp;
+	} else {
+		mode = rle;
+	}
+
 	unsigned int width, height;
 
-	// Neither "--random" nor "--rle"
-	if(strcmp(argv[1], "--random") && strcmp(argv[1], "--rle")) {
+	if(mode == bmp) {
 		// BMP <<<
 		f = fopen(argv[2], "rb");
 
@@ -619,7 +629,7 @@ int main (int argc, char const* argv[]) {
 		}
 		// >>>
 		// >>>
-	} else if(strcmp(argv[1], "--rle")) {
+	} else if(mode == random) {
 		// Random <<<
 		if(argc == 2)
 			width = DEFAULT_WIDTH, height = DEFAULT_WIDTH;
@@ -642,7 +652,7 @@ int main (int argc, char const* argv[]) {
 
 	struct pixel pic[width*height];
 
-	if(strcmp(argv[1], "--random") && strcmp(argv[1], "--rle")) {
+	if(mode == bmp) {
 		// BMP <<<
 		// ====== Padding Size ====== <<<
 
@@ -655,8 +665,8 @@ int main (int argc, char const* argv[]) {
 		initFromBMP(pic, f, pixelStart, pixelEnd, bpp, paddingSize, width, height);
 		fclose(f);
 		// >>>
-	} else if(strcmp(argv[1], "--rle")) {
-		// BMP <<<
+	} else if(mode == random) {
+		// Random <<<
 		initRandomly(pic, width, height);
 		// >>>
 	} else {
