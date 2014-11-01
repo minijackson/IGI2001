@@ -39,7 +39,7 @@ exo3.bin: exo3.c
 exo4.bin: exo4.c
 	$(CC) $(CFLAGS) $< -o $@ $(X11LIB) $(X11FLAGS) $(MATHFLAGS)
 
-report: rapport.tex
+report: rapport.tex outs $(SOURCES) exo4.c
 	$(TEX) rapport.tex
 	$(TEX) rapport.tex
 
@@ -52,13 +52,13 @@ exo2.out: exo2.bin
 	./$< > $@
 
 exo3.out: exo3.bin
-	./$< 1 2 3 4 > $@
+	./$< > $@
 
 exo4.out.png: exo4.bin
-	./$< & sleep 1 ; import -window `xwininfo -root -tree | grep "()  200x200" | awk '{print $$1}'` exo4.out.png
+	./$< --random & sleep 3 ; import -window `xwininfo -root -tree | grep "()  200x200" | awk '{print $$1}'` exo4.out.png
 
 clean:
-	rm *.bin *.pdf *.aux *.log *.out* *.tar.gz
+	rm *.bin *.pdf *.aux *.log *.out* *.toc *.tar.gz
 
 tarball: doc
 	tar zcvf $(notdir $(shell pwd)).tar.gz exo* *.pdf *.tex Makefile
