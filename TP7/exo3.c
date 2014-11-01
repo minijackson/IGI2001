@@ -14,5 +14,7 @@ int main() {
 		printf("%c, %i\n", c, c);
 	} while(c != EOF);
 
+	fclose(f);
+
 	return 0;
 }
