@@ -20,21 +20,39 @@
 //! @brief 16 millions colors in the RRGGBB color space
 #define COLOR_COUNT 16777216
 
+#define MODE_RANDOM 0
+#define MODE_BMP    0
+#define MODE_RLE    0
+
 typedef unsigned char byte;
 
 //! @brief A structure containing the colors of a pixel
 struct pixel {
-	byte pixelBytes[4];			//!< The 3 bytes of colors of the pixel (in the order of the BMP file)
+	//! The 3 bytes of colors of the pixel (in the order of the BMP file)
+	byte pixelBytes[4];
 };
 
 //! @brief A structure containing an allocated color
 struct colorAllocation {
-	XColor color;				//!< The allocated color
-	byte allocated;				//!< Equals to 1 if the color has been allocated, 0 else
+	XColor color;	//!< The allocated color
+	byte allocated;	//!< Equals to 1 if the color has been allocated, 0 else
 };
 
-struct colorAllocation allocatedColors[COLOR_COUNT]; //!< The allocated X11 colors
+//! The allocated X11 colors
+struct colorAllocation allocatedColors[COLOR_COUNT];
 
+// Print Usage <<<
+/*! @brief Print the command line arguments for this program
+ *
+ * @param programName the name used to invoke this program
+ */
+void printUsage(const char* programName) {
+	fprintf(stderr, "Usage:\n");
+	fprintf(stderr, "   %s --random [width height]\n", programName);
+	fprintf(stderr, "   %s --bmp file.bmp\n", programName);
+	fprintf(stderr, "   %s --rle file.rle\n", programName);
+}
+// >>>
 // Get Hex Code <<<
 /*! @brief Return the hexadecimal code of a pixel
  *
@@ -48,7 +66,7 @@ struct colorAllocation allocatedColors[COLOR_COUNT]; //!< The allocated X11 colo
  */
 char* getHexCode(struct pixel p, unsigned short int red,
 				unsigned short int green, unsigned short int blue) {
-	char* colorHexCode = malloc(8*sizeof(char));
+	char* colorHexCode = (char*)malloc(8*sizeof(char));
 	char redHexCode[3], greenHexCode[3], blueHexCode[3];
 	if(p.pixelBytes[red] < 0x10)
 		sprintf(redHexCode, "0%X", p.pixelBytes[red]);
@@ -88,6 +106,19 @@ unsigned int getIntCode(struct pixel p, unsigned short int red,
 			+ p.pixelBytes[blue];
 }
 // >>>
+// Is RLE Data <<<
+/*! @brief returns 1 if the given character is an RLE data caracter
+ *
+ * A character is considered a RLE data character if and only if it is an number
+ * or a 'b' or 'o' or a '$'.
+ *
+ * @param c the character to be checked
+ * @return 1 if it is a RLE data character, 0 else
+ */
+byte isRLEdata(char c) {
+	return ('0' <= c && c <= '9') || c == 'b' || c == 'o' || c == '$';
+}
+// >>>
 // Is Allocated <<<
 /*! @brief Return 1 if the color is already allocated, 0 else
  *
@@ -125,6 +156,7 @@ void affiche(Display *dpy, Window w, GC gc, struct pixel* tab,
 			XColor color;
 			Colormap cmap = DefaultColormap(dpy, 0);
 			XParseColor(dpy, cmap, colorHexCode, &color);
+			free(colorHexCode);
 
 			if(!isAllocated(colorIntCode)) {
 				XAllocColor(dpy, cmap, &color);
@@ -203,6 +235,125 @@ void initFromBMP(struct pixel* tab, FILE* f,
 	}
 }
 // >>>
+// Init From RLE <<<
+/*! @brief Initialize an array of pixel with an RLE file
+ *
+ * The file must already be opened. See http://www.conwaylife.com/wiki/RLE
+ *
+ * @param tab the array of pixels to be filled
+ * @param f the opened file containing the RLE data
+ * @param tabWidth the width of the array
+ * @param tabHeight the height of the array
+ */
+void initFromRLE(struct pixel* tab, FILE* f,
+				unsigned int tabWidth, unsigned int tabHeight) {
+	struct pixel* pattern;
+	struct pixel black = {{0, 0, 0, 0}};
+	unsigned int patternWidth = 0, patternHeight = 0,
+				 x = 0, y = 0;
+
+	fseek(f, 0, SEEK_END);
+	unsigned int end = ftell(f);
+	fseek(f, 0, SEEK_SET);
+
+	do {
+		unsigned int lineBeginPos = ftell(f);
+		char firstLineCharacter = fgetc(f);
+		if(firstLineCharacter == '#')
+			while(fgetc(f) != '\n');
+
+		// Get the height and the width of the pattern
+		if(firstLineCharacter == 'x' && patternWidth == 0 && patternHeight == 0) {
+			fscanf(f, "%*[ ]=%*[ ]%u,%*[ ]y%*[ ]=%*[ ]%u",
+					&patternWidth, &patternHeight);
+			pattern = malloc(patternWidth*patternHeight * sizeof(struct pixel));
+			while(fgetc(f) != '\n');
+		}
+
+		// Beginning of a RLE data line
+		if(isRLEdata(firstLineCharacter)) {
+
+			if(patternWidth == 0 || patternHeight == 0) {
+				fprintf(stderr, "No non-null pattern width or height given\n");
+				exit(EX_DATAERR);
+			} else {
+				fseek(f, lineBeginPos, SEEK_SET);
+				unsigned int cellCount = 0;
+				char c = fgetc(f);
+
+				if(isRLEdata(c)) {
+					while('0' <= c && c <= '9') {
+						// Convert c to number
+						cellCount = (cellCount * 10) + (c - '0');
+						c = fgetc(f);
+					}
+					cellCount = (cellCount == 0)? 1 : cellCount;
+					// 'b' means dead cell
+					if(c == 'b') {
+						for(unsigned int i = 0 ; i < cellCount ; ++i, ++x) {
+							pattern[x + (y * patternWidth)] = black;
+						}
+					// 'o' means alive cell
+					} else if(c == 'o') {
+						for(unsigned int i = 0 ; i < cellCount ; ++i, ++x) {
+							/* pattern[x + (y * patternWidth)] = white; */
+							for(unsigned int j = 0 ; j <= 3 ; ++j)
+								pattern[x + (y * patternWidth)].pixelBytes[j] = rand() % 256;
+						}
+					// '$' means end of line (can take a count before)
+					} else if(c == '$') {
+						for(unsigned int i = 0 ; i < cellCount ; ++i) {
+							// Fill the rest of the line
+							while(x < patternWidth) {
+								pattern[x + (y * patternWidth)] = black;
+								++x;
+							}
+							++y;
+							x = 0;
+						}
+					} else {
+						fprintf(stderr, "Error: expected 'b', 'o' or '$' in RLE file\n");
+						exit(EX_DATAERR);
+					}
+				// '!' means end of data. Everything else can be ignored
+				} else if(c == '!') {
+					// Fill the rest
+					while(y < patternHeight) {
+						while(x < patternWidth) {
+							pattern[x + (y * patternWidth)] = black;
+							++x;
+						}
+						++y;
+						x = 0;
+					}
+					break;
+				}
+
+			}
+
+		}
+	} while(ftell(f) != end);
+
+	// Centering of the pattern in the window
+	unsigned int left = (tabWidth / 2) - (patternWidth / 2);
+	unsigned int top = (tabHeight / 2) - (patternHeight / 2);
+
+	for(x = 0 ; x < tabWidth ; ++x) {
+		for(y = 0 ; y < tabHeight ; ++y) {
+			tab[x + (y * tabWidth)] = black;
+		}
+	}
+
+	// Copy the pattern in the array
+	for(x = left ; x < left + patternWidth ; ++x) {
+		for(y = top ; y < top + patternHeight ; ++y) {
+			tab[x + (y * tabWidth)] = pattern[x - left + ((y-top) * patternWidth)];
+		}
+	}
+
+	free(pattern);
+}
+// >>>
 // Color Position <<<
 /*! @brief Return the position of a color considering its bitmask
  *
@@ -218,10 +369,12 @@ unsigned short int colorPosition(unsigned int colorMask) {
 /*! @brief Returns 1 if the given pixel is considered "alive"
  *
  * A pixel is considered alive when its color is different from black
+ *
  * @param p the pixel to be tested
  * @param red the position of the red color code
  * @param green the position of the green color code
  * @param blue the position of the blue color code
+ * @return 1 if the pixel is considered "alive", 0 else
  */
 unsigned short int isAlive(struct pixel p, unsigned short int red,
 							unsigned short int green, unsigned short int blue) {
@@ -234,6 +387,7 @@ unsigned short int isAlive(struct pixel p, unsigned short int red,
  *
  * It counts the number of "cells" considered "alive" of a pixel's 8
  * surrounding locations.
+ *
  * @param tab the array of pixels
  * @param x the x location of the pixel
  * @param y the y location of the pixel
@@ -242,8 +396,10 @@ unsigned short int isAlive(struct pixel p, unsigned short int red,
  * @param red the position of the red color code
  * @param green the position of the green color code
  * @param blue the position of the blue color code
+ * @return The number of neighbours of the given pixel
  */
-unsigned short int neighbourCount(struct pixel* tab, unsigned int x, unsigned int y,
+unsigned short int neighbourCount(struct pixel* tab,
+							unsigned int x, unsigned int y,
 							unsigned int tabWidth, unsigned int tabHeight,
 							unsigned short int red, unsigned short int green,
 							unsigned short int blue) {
@@ -261,7 +417,24 @@ unsigned short int neighbourCount(struct pixel* tab, unsigned int x, unsigned in
 }
 // >>>
 // Mix Neighbours Colors <<<
-struct pixel mixNeighbousColors(struct pixel* tab, unsigned int x, unsigned int y,
+/*! @brief Return a color which is a mix of all the neighbours colors
+ * of a given pixel
+ *
+ * It uses the mean of the red, green and blue channels of the colors of the
+ * neighbours.
+ *
+ * @param tab the array of pixels
+ * @param x the x location of the pixel
+ * @param y the y location of the pixel
+ * @param tabWidth the width of the array
+ * @param tabHeight the height of the array
+ * @param red the position of the red color code
+ * @param green the position of the green color code
+ * @param blue the position of the blue color code
+ * @return The mix of all the neighbours colors
+ */
+struct pixel mixNeighbousColors(struct pixel* tab,
+							unsigned int x, unsigned int y,
 							unsigned int tabWidth, unsigned int tabHeight,
 							unsigned short int red, unsigned short int green,
 							unsigned short int blue) {
@@ -294,6 +467,26 @@ struct pixel mixNeighbousColors(struct pixel* tab, unsigned int x, unsigned int 
 }
 // >>>
 // Next Step <<<
+/*! @brief Compute the next step of the given array of pixel considering
+ * the laws of Conway's Game of Life
+ *
+ * The rules are:
+ * - Any live cell with fewer than two live neighbours dies,
+ *   as if caused by under-population.
+ * - Any live cell with two or three live neighbours lives on
+ *   to the next generation.
+ * - Any live cell with more than three live neighbours dies,
+ *   as if by overcrowding.
+ * - Any dead cell with exactly three live neighbours becomes a live cell,
+ *   as if by reproduction.
+ *
+ * @param tab the array of pixels
+ * @param tabWidth the width of the array
+ * @param tabHeight the height of the array
+ * @param red the position of the red color code
+ * @param green the position of the green color code
+ * @param blue the position of the blue color code
+ */
 void nextStep(struct pixel* tab, unsigned int tabWidth, unsigned int tabHeight,
 			unsigned short int red, unsigned short int green,
 			unsigned short int blue) {
@@ -342,27 +535,41 @@ int main (int argc, char const* argv[]) {
 
 	srand(time(NULL));
 
-	// ====== Check command-line usage ====== //
-	if(argc != 2) {
-		fprintf(stderr, "Usage: %s {--random | file.bmp}\n", argv[0]);
+	// ====== Check command-line usage ====== <<<
+	if(argc == 1 || argc > 4) {
+		printUsage(argv[0]);
 		return EX_USAGE;
+	} else if(argc == 2 || argc == 4) {
+		if(strcmp(argv[1], "--random")) {
+			printUsage(argv[0]);
+			return EX_USAGE;
+		}
+	} else if(argc == 3) {
+		// Neither "--bmp" nor "--rle"
+		if(strcmp(argv[1], "--bmp") && strcmp(argv[1], "--rle")) {
+			printUsage(argv[0]);
+			return EX_USAGE;
+		}
 	}
+	// >>>
 
 	unsigned int width, height;
 
-	if(strcmp(argv[1], "--random")) {
-		f = fopen(argv[1], "rb");
+	// Neither "--random" nor "--rle"
+	if(strcmp(argv[1], "--random") && strcmp(argv[1], "--rle")) {
+		// BMP <<<
+		f = fopen(argv[2], "rb");
 
 		// ====== Check if readable file ====== <<<
 		if(f == NULL) {
-			fprintf(stderr, "Error: Could not load the file \"%s\"\n", argv[1]);
+			fprintf(stderr, "Error: Could not load the file \"%s\"\n", argv[2]);
 			return EX_NOINPUT;
 		}
 		// >>>
 		// ====== BMP file magic check ====== <<<
 		// If it really is a BMP, the first two bytes are the ASCII code of "BM"
 		char magic[3];
-		// Read the first two bytes one time starting from the 'magi'c memory block
+		// Read the first two bytes one time starting from the magic memory block
 		fread(&magic, 2, 1, f);
 		if (!(magic[0] == 'B' && magic[1] == 'M')) {
 			fprintf(stderr, "Error: Not a BMP file\n");
@@ -370,9 +577,10 @@ int main (int argc, char const* argv[]) {
 		}
 		// >>>
 		// ====== Width and Height ====== <<<
-		// width and height located at offsets 0x12 and 0x12
+		// width and height located at offsets 0x12 and 0x16
 		fseek(f, 0x12, SEEK_SET);
-		// Load the width and height into the corresponding variables (4 bytes each)
+		// Load the width and height into the corresponding variables
+		// (4 bytes each)
 		fread(&width, 4, 1, f);
 		fread(&height, 4, 1, f);
 
@@ -407,15 +615,35 @@ int main (int argc, char const* argv[]) {
 			blue = colorPosition(blueMask);
 		} else if(bpp != 3) {
 			fprintf(stderr, "Error: Only RGB and RGBA file supported.\n");
+			return EX_DATAERR;
 		}
+		// >>>
+		// >>>
+	} else if(strcmp(argv[1], "--rle")) {
+		// Random <<<
+		if(argc == 2)
+			width = DEFAULT_WIDTH, height = DEFAULT_WIDTH;
+		else
+			width = atoi(argv[2]), height = atoi(argv[3]);
+		// >>>
 	} else {
+		// RLE <<<
+		f = fopen(argv[2], "r");
+
+		// ====== Check if readable file ======
+		if(f == NULL) {
+			fprintf(stderr, "Error: Could not load the file \"%s\"\n", argv[2]);
+			return EX_NOINPUT;
+		}
+
 		width = DEFAULT_WIDTH, height = DEFAULT_WIDTH;
+		// >>>
 	}
-	// >>>
 
 	struct pixel pic[width*height];
 
-	if(strcmp(argv[1], "--random")) {
+	if(strcmp(argv[1], "--random") && strcmp(argv[1], "--rle")) {
+		// BMP <<<
 		// ====== Padding Size ====== <<<
 
 		// There is a padding column until the row reaches a multiple of 4 bytes
@@ -426,20 +654,25 @@ int main (int argc, char const* argv[]) {
 		// Read pixel array
 		initFromBMP(pic, f, pixelStart, pixelEnd, bpp, paddingSize, width, height);
 		fclose(f);
-	} else {
+		// >>>
+	} else if(strcmp(argv[1], "--rle")) {
+		// BMP <<<
 		initRandomly(pic, width, height);
+		// >>>
+	} else {
+		// RLE <<<
+		initFromRLE(pic, f, width, height);
+		// >>>
 	}
 
 	// ====== X11 initialization ====== <<<
 	XEvent e;
-	Display *dpy = XOpenDisplay(NULL); //pointeur sur un ecran
+	Display *dpy = XOpenDisplay(NULL);
 	int noir = BlackPixel(dpy, DefaultScreen(dpy));
-	// creation fenetre : taille, couleur... :
 	Window w = XCreateSimpleWindow(dpy, DefaultRootWindow(dpy), 0, 0,
 			width, height, 0, noir, noir);
-	XMapWindow(dpy, w); // Affiche la fenetre sur l'ecran
-	GC gc = XCreateGC(dpy,w,0,NULL); //On a besoin d'un Graphic Context pour dessiner
-	// Il faut attendre l'autorisation de dessiner
+	XMapWindow(dpy, w);
+	GC gc = XCreateGC(dpy,w,0,NULL);
 	XSelectInput(dpy, w, StructureNotifyMask);
 
 	while (e.type != MapNotify)
