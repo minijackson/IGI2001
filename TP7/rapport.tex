@@ -124,15 +124,20 @@ rassembler faisant ainsi une nouvelle couleur qui est un mélange de ses
 le recompiler, la ligne de commande a été utilisée. Ainsi, le programme prends
 un paramètre : soit l'option \texttt{----random} qui génèrera une image à
 couleurs aléatoire de taille définie par les \lstinline[style=prog]|#define|
-dans le code source, soit le chemin (relatif ou absolu) d'une image sous le
-format BMP qui sera analysée et utilisée comme configuration initiale pour le
-Jeu de la Vie.
+dans le code source à moins que 2 chiffres correspondant respectivement à la
+largeur et à la hauteur de la fenêtre ne soient donnés après l'option
+\texttt{----random}, soit l'option \texttt{----bmp} suivit d'un chemin
+(relatif ou absolu) d'une image sous le format BMP qui sera analysée et
+utilisée comme configuration initiale pour le Jeu de la Vie ou encore l'option
+\texttt{----rle} suivit d'un chemin d'un fichier \texttt{.rle} contenant des
+données RLE d'un motif du Jeu de la Vie (cf.~\ref{ssec-rle}).
 
 \subsection{Analyse d'un fichier BMP}
 
 \paragraph{} Afin d'analyser un fichier BMP, il a fallu passer par certaines
 étapes, notamment la récupération de la taille, la détection du nombre d'octets
-par pixel, et autres.
+par pixel, et autres.\footnote{voir
+\href{http://en.wikipedia.org/wiki/BMP_file_format}{l'article Wikipedia}}
 
 \paragraph{} On notera tout de même que le premier pixel du tableau de pixel de
 l'image est le pixel en bas à gauche de la représentation graphique de l'image.
@@ -202,7 +207,7 @@ On fera donc $\log_{256}\left(\dfrac{masque}{255}\right) =
 \paragraph{} La partie tableau de pixels du fichier de l'image BMP possède un
 ``padding'' qui fait en sorte que à chaque fin de ligne de l'image, des données
 sont ajoutées afin que le nombre d'octets de chaque ligne soient un multiple de
-4. On a donc : 
+4. On a donc :
 
 \begin{equation}
 		padding =	\begin{dcases*}
@@ -220,6 +225,96 @@ Ce qui est équivalent à :
 \paragraph{} Ainsi, à chaque fin de ligne, il faut ``sauter'' le padding pour
 pouvoir accéder à la ligne suivante grâce à la ligne
 \lstinline[style=prog]|fseek(fichier, padding, SEEK_CUR)|.
+
+\subsection{Analyse d'un fichier RLE}\label{ssec-rle}
+
+\paragraph{} Afin de pouvoir rentrer des motifs de manière plus simple que de
+rentrer chaque pixel un par un ou d'essayer le mode aléatoire de manière
+continue, un fichier \texttt{.rle} peut être fournis et va être analysé par le
+programme.\footnote{Voir
+\href{http://conwaylife.com/wiki/Run_Length_Encoded}{l'article sur ConwayLife}}
+
+\subsubsection{Commentaires}
+
+\paragraph{} Il y a 5 types de commentaires dans les fichiers \texttt{.rle} et
+sont donc ignorés:
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|c|p{10cm}|}
+		\hline
+		\textbf{Commentaire} & \textbf{Description}\\
+		\hline
+		\#C ou \#c & Commentaire classique\\
+		\hline
+		\#N & Nom du motif\\
+		\hline
+		\#O & Auteur du motif\\
+		\hline
+		\#P ou \#R & Coordonnées du coin haut gauche
+					(ignorées car le motif est placé au centre de la fenêtre)\\
+		\hline
+		\#r & Fournis les règles du Jeu de la Vie pour ce motif (ignorées)\\
+		\hline
+	\end{tabular}
+	\caption{Formes de commentaires d'un fichier \texttt{.rle}}
+	\label{tab:rlecomments}
+\end{table}
+
+\subsubsection{Largeur et hauteur du motif}
+
+\paragraph{} La largeur et la hauteur du motif est généralement stocké après
+les commentaires dans un ligne de type :
+
+\texttt{x = m, y = n}
+
+Cette ligne est donc lue par le programme et il en est déduit après la position
+du motif dans la fenêtre en calculant la coordonnées de la cellule haut gauche
+grâce à la formule :
+
+\begin{equation}
+	\begin{pmatrix}
+		x\\y
+	\end{pmatrix}
+	=
+	\begin{pmatrix}
+		\dfrac{LargeurFenêtre}{2} - \dfrac{LargeurMotif}{2}\\
+		\dfrac{HauteurFenêtre}{2} - \dfrac{HauteurMotif}{2}
+	\end{pmatrix}
+\end{equation}
+
+\subsubsection{Données des ``cellules''}
+
+\paragraph{} Généralement après les commentaires et obligatoirement après la
+taille du motif, les données concernant les ``cellules'' sont stockées et
+interprétables grâce à trois symboles et des chiffres :
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|c|p{5cm}|}
+		\hline
+		\textbf{Indicateur} & \textbf{Description}\\
+		\hline
+		b & Cellule vivante\\
+		\hline
+		o & Cellule morte\\
+		\hline
+		\$ & Fin de la ligne (sous entendu le reste des cellules de la ligne
+								sont des cellules mortes)\\
+		\hline
+	\end{tabular}
+	\caption{Identificateur de vie des cellules dans un fichier \texttt{.rle}}
+	\label{tab:rletags}
+\end{table}
+
+\paragraph{} Chacun des identificateurs du tableau~\ref{tab:rletags} peuvent
+prendre un compteur comme argument (qui sera placé avant le dit indicateur).
+Cela impliquera que l'indicateur sera répété autant de fois qu'indiqué par le
+compteur.
+
+\paragraph{} La fin des données du fichier \texttt{.rle} est indiqué par le
+symbole ``!'' qui sous entend comme le symbole ``\$'' que le reste des
+``cellules'' sont des ``cellules mortes''.
 
 \subsection{Allocation des couleurs}
 

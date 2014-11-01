@@ -302,7 +302,7 @@ void initFromRLE(struct pixel* tab, FILE* f,
 							for(unsigned int j = 0 ; j <= 3 ; ++j)
 								pattern[x + (y * patternWidth)].pixelBytes[j] = rand() % 256;
 						}
-					// '$' means end of line (can take a count before)
+					// '\$' means end of line (can take a count before)
 					} else if(c == '$') {
 						for(unsigned int i = 0 ; i < cellCount ; ++i) {
 							// Fill the rest of the line
