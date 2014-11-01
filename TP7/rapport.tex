@@ -2,11 +2,13 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{textcomp}
 \usepackage[french]{babel}
 \usepackage[]{amsmath}
 \usepackage{amsfonts}
 \usepackage{mathrsfs}
 \usepackage{mathtools}
+\usepackage{mathabx}
 \usepackage[]{graphicx}
 \usepackage{fullpage}
 \usepackage[usenames,dvipsnames]{color}
@@ -45,6 +47,14 @@
 	breaklines=true
 }
 
+\lstdefinestyle{outfile}{%
+	caption=Fichier de sortie,
+	frame=shadowbox,
+	rulesepcolor=\color{gray},
+	belowcaptionskip=1\baselineskip,
+	breaklines=true
+}
+
 \author{Rémi \textsc{Nicole}}
 \title{Rapport du TP 6 d'IGI-2001}
 \date{}
@@ -56,14 +66,11 @@
 \chapter{Exercice 1}
 \lstinputlisting[style=prog]{exo1.c}
 \lstinputlisting[style=output]{exo1.out}
+\lstinputlisting[style=outfile]{exo1.f.out}
 
 \chapter{Exercice 2}
 \lstinputlisting[style=prog]{exo2.c}
 \lstinputlisting[style=output]{exo2.out}
-
-\section{Question 1}
-On doit constater un résultat égal à 0 car les valeurs ont été initialisée à la
-déclaration.
 
 \chapter{Exercice 3}
 \lstinputlisting[style=prog]{exo3.c}
@@ -75,170 +82,155 @@ déclaration.
 \begin{figure}[h]
 	\centering
 	\includegraphics{{exo4.out}.png}
-	\caption{Capture d'écran du résultat de l'exercice 4}
+	\caption{Capture d'écran du résultat de l'exercice 4 avec initialisation
+	aléatoire}
 \end{figure}
-À gauche les cercles créés avec la méthode trigonométrique et à droite
-avec la méthode cartésienne
 
-\section{Question 1}
-Ce code initialise le système d'affichage, les couleurs noir et blanc, la
-fenêtre, l'affiche, attends la possibilité de dessiner dessus, dessine la
-diagonale haut gauche, deux points aux coordonnées $ \begin{pmatrix} 10\\ 50
-\end{pmatrix} $ et $ \begin{pmatrix} 10\\ 51 \end{pmatrix} $ et finalement
-``force'' l'affichage (autrement dit les affiche).
+\section{Génération aléatoire}
 
-\section{Question 2}
-\subsection{Solution cartésienne}
+\paragraph{} Pour la génération aléatoire, il a fallu utiliser une probabilité
+pondérée car il est considéré que un pixel non noir est ``vivant''. Ainsi, un
+pixel a une probabilité de $\dfrac{1}{5}$ d'être ``vivant'' et chaque canal
+correspondant à soit la couleur rouge, verte ou bleue est initialisée
+aléatoirement (entre \texttt{0x0} et \texttt{0xFF}, soit dans l'intervalle
+$\left\ldbrack0 ; 256\right\ldbrack$). On utilise donc la fonction
+\lstinline[style=prog]|srand(time(NULL))| pour initialiser la séquence de
+nombre pseudo aléatoires avec le nombre de secondes écoulées depuis 1970 et on
+utilise \lstinline[style=prog]|rand() % 256| pour obtenir un nombre aléatoire
+dans l'intervalle $\left\ldbrack0 ; 256\right\ldbrack$.
 
-\paragraph{} Afin de dessiner un cercle, on utilise l'équation cartésienne du
-cercle:
+\section{Calcul du lendemain}
 
-\begin{equation}
-	{\left(x-x_0\right)}^2 + {\left(y-y_0\right)}^2 = r^2
-	\label{cartcercle}
-\end{equation}
+\paragraph{} Pour le calcul du ``jour d'après'', il a fallu créer un tableau
+temporaire contenant le résultat avant de le copier entièrement (avec
+\lstinline[style=prog]|memcopy|) dans le tableau original pour éviter que les
+``cellules'' qui étaient vivante le jour d'avant et sont devenue mortes ne
+compte pas comme voisin et inversement.
 
-Avec
-$ \begin{pmatrix}
-	x_0\\y_0
-\end{pmatrix} $
-les coordonnées du centre du cercle et $r$ le rayon du cercle.
+\paragraph{} De plus, en raison de la gestion de couleur qui a été ajouté dans
+le programme, il a fallu déterminer la couleur des ``cellules naissantes''.
+Ainsi, une fonction \lstinline[style=prog]|mixNeighbousColors| a été crée afin
+de faire un ``mélange'' des couleurs des voisins de la cellule naissante. Pour
+ce faire, il a suffit de récupérer chaque canaux de couleurs (autre que
+l'alpha), de faire une moyenne de ces canaux des 3 ``voisins'' et de les
+rassembler faisant ainsi une nouvelle couleur qui est un mélange de ses
+``parents''.
 
-\paragraph{} Cependant, ne pouvant tracer $y$ sans connaître $x$ ni tracer $x$
-sans connaître $y$, il suffit d'isoler la variable $x$ ou la variable $y$ de
-l'équation~\ref{cartcercle} pour obtenir une équation exploitable pour le
-programme.  On obtient donc:
+\section{Améliorations}
 
-\begin{equation}
-	y = \pm \sqrt{r^2 - {\left(x-x_0\right)}^2} + y_0
-	\label{cercle}
-\end{equation}
+\subsection{Utilisation de la ligne de commande}
 
-\paragraph{} Le fait d'avoir un $\pm$ dans l'équation~\ref{cercle} n'est en
-aucun gênant car il est évidemment possible de calculer les deux possibilités
-et de les enregistrer dans le tableau qui sera affiché.
+\paragraph{} Afin d'avoir le contrôle de l'exécution du programme sans avoir à
+le recompiler, la ligne de commande a été utilisée. Ainsi, le programme prends
+un paramètre : soit l'option \texttt{----random} qui génèrera une image à
+couleurs aléatoire de taille définie par les \lstinline[style=prog]|#define|
+dans le code source, soit le chemin (relatif ou absolu) d'une image sous le
+format BMP qui sera analysée et utilisée comme configuration initiale pour le
+Jeu de la Vie.
 
-\paragraph{} Malheureusement, la fonction \texttt{pow} de la STL du langage C
-gère mal les nombres négatifs à la base. Il faut donc utilise la fonction
-\texttt{abs} de la STL pour les valeurs à la base d'une puissance qui risquent
-d'être négatives, soit $x-x_0$. L'équation~\ref{cercle} deviendra donc dans le
-programme:
+\subsection{Analyse d'un fichier BMP}
 
-\begin{equation}
-	y_+ = y_0 + \sqrt{r^2 - {\left|x-x_0\right|}^2}
-	\label{progcerclpos}
-\end{equation}
-et
-\begin{equation}
-	y_- = y_0 - \sqrt{r^2 - {\left|x-x_0\right|}^2}
-	\label{progcerclneg}
-\end{equation}
+\paragraph{} Afin d'analyser un fichier BMP, il a fallu passer par certaines
+étapes, notamment la récupération de la taille, la détection du nombre d'octets
+par pixel, et autres.
 
-\subsection{Solution trigonométrique}
+\paragraph{} On notera tout de même que le premier pixel du tableau de pixel de
+l'image est le pixel en bas à gauche de la représentation graphique de l'image.
 
-\paragraph{} Un autre solution serait d'utiliser l'équation paramétrique:
+\subsubsection{Vérification magique du fichier BMP}
 
-\begin{equation}
-	\begin{pmatrix}
-		x\\y
-	\end{pmatrix}
-	=
-	\begin{pmatrix}
-		r\times\cos(t) + x_0\\
-		r\times\sin(t) + y_0
-	\end{pmatrix}
-	\label{param}
-\end{equation}
+\paragraph{} La première chose faite après vérification de la lisibilité du
+fichier lorsqu'un paramètre autre que l'option \texttt{----random} est passé au
+programme est vérifier si le nom du fichier correspond bien à un fichier BMP,
+non pas au niveau de l'extension du fichier, mais au niveau des nombres
+magiques. En effet, les deux premiers octets d'un fichier correspondant à une
+image BMP sont \texttt{0x42} et \texttt{0x4D}, ce qui correspond au code ASCII
+des lettres ``B'' et ``M''. C'est ce que font les lignes 399--408 du programme.
 
-et de faire varier $t$ sur l'intervalle $\left[0,2\pi\right]$ via une boucle
-\lstinline[style=prog]|for| et par étape déterminant la précision du tracé du
-cercle.
+\subsubsection{Récupération de la largeur de hauteur de l'image}
 
-\subsection{Avantages et inconvénients}
+\paragraph{} Afin de récupérer la largeur et la hauteur de l'image, les
+$4\times2$ octets aux offsets \texttt{0x12} et \texttt{0x16} contenant
+respectivement la largeur et la hauteur de l'image sont récupérés. Ainsi, si
+les l'octet d'offset de \texttt{0x12} à \texttt{0x15} inclus il est contenu
+\texttt{80 02 00 00} soit \texttt{00 00 02 80} en big-endian, ce la signifie
+que l'image est de largeur \texttt{0x280} soit 640.
 
-\paragraph{} Les avantages de la solution cartésienne sont d'abords le fait que
-l'on puisse déduire deux valeurs à partir d'une seule racine (à une addition
-près) et donc dessiner deux valeurs ``en même temps'' et le fait que la
-précision sur l'axe x est ``parfaite'' de par le fait que l'on incrémente pixel
-par pixel. Cependant, cela entraîne des points manquant par rapport à l'axe y,
-ce qui se remarque sur la capture d'écran.
+\subsubsection{Début et fin du tableau de pixel}
 
-\paragraph{} Les avantages de la solution trigonométrique sont sa simplicité (8
-lignes de moins que la solution cartésienne) et le fait qu'il y ait une
-précision constante sur les deux axes. Cela entraîne aussi le fait que pour
-avoir une précision correcte sur un cercle quelque soit son rayon, il faut
-calculer le pas de la boucle \lstinline[style=prog]|for| en fonction du rayon.
-Pour cela, il faut que le différence entre deux valeurs adjacente soit
-inférieure à $1$ (la distance minimale entre deux pixels). On a donc:
+\paragraph{} Le début du tableau de pixel dans le fichier binaire du BMP est à
+un offset qui est stocké l'offset \texttt{0xA}. Il est donc récupéré dans la
+variable \lstinline[style=prog]|unsigned int pixelStart|. Afin de récupérer la
+fin du tableau de pixel, la fonction \lstinline[style=prog]|fseek| est utilisée
+pour aller à la fin du fichier et grâce à la fonction
+\lstinline[style=prog]|ftell|, l'offset de fin de fichier est récupéré et
+stocké dans la variabel \lstinline[style=prog]|unsigned int pixelEnd|.
 
-\[
-	\sqrt{{\left(x(t) - x(t+s)\right)}^2 + {\left(y(t) - y(t+s)\right)}^2} \leq 1
-\]
+\subsubsection{Nombres d'octets par pixel}
 
-avec $x(t)$ et $y(t)$ les fonctions d'abscisse et d'ordonnée de l'équation
-paramétrique~\ref{param} et $s$ l'étape corrélée à la précision du tracé du
-cercle qui est utilisé dans la boucle \texttt{for}.
+\paragraph{} Le nombre de bits par pixel peut varier en fonction de l'image (et
+notamment à cause du canal alpha). Pour palier à cela, cette valeur est stockée
+à l'offset \texttt{0x1C}. Elle est ensuite convertie en octets pour être
+exploité plus directement.
 
-\begin{align*}
-	\Leftrightarrow &~{\left(r\times\cos(t) + x_0 - r\times\cos(t+s) - x_0\right)}^2 +
-					  {\left(r\times\sin(t) + y_0 - r\times\sin(t+s) - y_0\right)}^2
-					& \leq 2\\
-	\Leftrightarrow &~{\left(r\times(\cos(t) - \cos(t+s))\right)}^2 +
-					  {\left(r\times(\sin(t) - \sin(t+s))\right)}^2
-					& \leq 2\\
-	\Leftrightarrow &~r^2 \times \left({\left(\cos(t) - \cos(t+s)\right)}^2 +
-									   {\left(\sin(t) - \sin(t+s)\right)}^2\right)
-					& \leq 2\\
-	\Leftrightarrow &~r^2 \times \left({\cos(t)}^2 + {\sin(t)}^2
-									   - 2\times\big(\cos(t)\cos(t+s) + \sin(t)\sin(t+s)\big)
-									   + {\sin(t+s)}^2 + {\cos(t+s)}^2 \right)
-					& \leq 2\\
-	\Leftrightarrow &~2\times r^2 \times \left(1 - \big(\cos(t)\cos(t+s) + \sin(t)\sin(t+s)\big)
-										 \right) & \leq 2\\
-	\Leftrightarrow &~r^2\times\bigg(1 - \Big(\cos(t)\big[\cos(t)\cos(s) - \sin(t)\sin(s)\big]
-											 + \sin(t)\big[\sin(t)\cos(s) + \cos(t)\sin(s)\big]\Big)
-								\bigg) & \leq 1\\
-	\Leftrightarrow &~r^2\times\left(1 - \cos(s)\times\left({\cos(t)}^2 + {\sin(t)}^2\right)\right) & \leq 1\\
-	\Leftrightarrow &~r^2\times(1-\cos(s)) & \leq 1\\
-	\Leftrightarrow &\cos(s) & \geq 1 - \dfrac{1}{r^2}\\
-\end{align*}
+\paragraph{} Dans le cas où il y a 3 octets par pixel, il n'y a pas de canal
+alpha et l'ordre des canaux de couleurs est bleu, vert et ensuite rouge, de par
+le fait que les données sont stockées en little-endian.
 
-et comme $1-\dfrac{1}{r^2} \in [-1,1]$ et que la fonction $\cos^{-1}$ est
-décroissante sur $[-1,1]$ on en déduit que:
-\begin{equation}
-	s \leq \cos^{-1}\left(1-\dfrac{1}{r^2}\right)
-\end{equation}
+\paragraph{} Dans le cas où il y a 4 octets par pixel, le canal alpha est
+présent et l'ordre des canaux change en fonction du logiciel ou de la personne
+qui a créé le bitmap. Afin de connaître l'ordre des canaux, des masques sont
+fournis de l'offset \texttt{0x36} (masque du canal rouge) à l'offset
+\texttt{0x42} (masque du canal alpha), bien sûr de taille 4 octets et stocké en
+little-endian.
 
-Cependant, on sait que $r$ est petit donc on peut faire un approximation de
-$\cos(x)$ en $1-\dfrac{x^2}{2}$. Cela donne:
+\paragraph{} Afin d'utiliser le même code pour les images possédant 3 octets
+par pixel et 4 octets par pixel, les variables
+\lstinline[style=prog]|unsigned short int red|
+\lstinline[style=prog]|unsigned short int green| et
+\lstinline[style=prog]|unsigned short int blue| sont utilisées et contiennent
+un chiffre correspondant à leur place dans les 3 ou 4 octets du pixel. Pour
+calculer leur place dans les octets du pixel, il faut récupérer la place du
+\texttt{0xFF} dans le masque parmi les autres \texttt{0x00}. On divise donc le
+masque par \texttt{0xFF} ou $255$ et il n'y a plus qu'a obtenir le nombre de
+fois que cette valeur a été multiplié par \texttt{0x100} soit $16\times16=256$.
+On fera donc $\log_{256}\left(\dfrac{masque}{255}\right) =
+\dfrac{\log\left(\dfrac{masque}{255}\right)}{\log\left(256\right)}$
 
-\begin{align*}
-	1-\dfrac{s^2}{2}                    & \geq 1-\dfrac{1}{r^2}\\
-	\Leftrightarrow\qquad\dfrac{s^2}{2} & \leq \dfrac{1}{r^2}\\
-\end{align*}
-Et par approximation de la racine, on obtient donc:
-\begin{equation}
-	s \leq \dfrac{1}{r}
-\end{equation}
+\subsubsection{Calcul du padding du tableau de pixel}
 
-Ce résultat s'explique aussi par le fait que la différentielle de la
-circonférence d'un cercle est égale à:
+\paragraph{} La partie tableau de pixels du fichier de l'image BMP possède un
+``padding'' qui fait en sorte que à chaque fin de ligne de l'image, des données
+sont ajoutées afin que le nombre d'octets de chaque ligne soient un multiple de
+4. On a donc : 
 
 \begin{equation}
-	\partial \mathcal{C} = r\times\partial t \leq 1
+		padding =	\begin{dcases*}
+						0 & si $nbOctetsParLigne \equiv 0[4]$\\
+						4 - (nbOctetsParLigne \mod 4) & sinon
+					\end{dcases*}
 \end{equation}
 
-Avec $\mathcal{C}$ la circonférence du cercle et avec $\partial t = s$. Cela
-nous donne donc:
+Ce qui est équivalent à :
 
 \begin{equation}
-	s \leq \dfrac{1}{r}
+	padding = \big(4 - (tailleLigne * nbOctetsParPixels \mod 4)\big) \mod 4
 \end{equation}
 
-\paragraph{} On utilise donc cette approximation afin d'avoir une étape
-convenable pour la précision du tracé du cercle. Cela fait donc encore un
-calcul de plus (mais approximé) par rapport à la méthode cartésienne qui est
-dans ce cas de figure.
+\paragraph{} Ainsi, à chaque fin de ligne, il faut ``sauter'' le padding pour
+pouvoir accéder à la ligne suivante grâce à la ligne
+\lstinline[style=prog]|fseek(fichier, padding, SEEK_CUR)|.
+
+\subsection{Allocation des couleurs}
+
+\paragraph{} Afin de ne pas allouer à nouveau de la mémoire pour des couleurs
+ayant de la mémoire déjà allouée, la variable globale
+\lstinline[style=prog]|allocatedColors| est utilisée. Il s'agit d'un tableau de
+structure contenant la couleur (de type \lstinline[style=prog]|XColor|) et un
+chiffre, 1 si la couleur a déjà de la mémoire allouée, 0 sinon. Le tableau est
+trié de telle manière que l'élément n°$n \in \left\ldbrack0 ;
+256^3\right\ldbrack$ soit la couleur \texttt{\#XXXXXX} avec \texttt{XXXXXX} la
+représentation de $n$ en base $16$.
 
 \end{document}
 % vim: spelllang=fr:spell
