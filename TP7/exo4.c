@@ -66,8 +66,8 @@ void printUsage(const char* programName) {
  * @param blue the position of the blue color code
  * @return The hexadecimal code of the color
  */
-char* getHexCode(struct pixel p, unsigned short int red,
-				unsigned short int green, unsigned short int blue) {
+char* getHexCode(const struct pixel p, const unsigned short int red,
+				const unsigned short int green, const unsigned short int blue) {
 	char* colorHexCode = (char*)malloc(8*sizeof(char));
 	char redHexCode[3], greenHexCode[3], blueHexCode[3];
 	if(p.pixelBytes[red] < 0x10)
@@ -101,8 +101,9 @@ char* getHexCode(struct pixel p, unsigned short int red,
  * @param blue the position of the blue color code
  * @return The int code of the color
  */
-unsigned int getIntCode(struct pixel p, unsigned short int red,
-						unsigned short int green, unsigned short int blue) {
+unsigned int getIntCode(const struct pixel p, const unsigned short int red,
+						const unsigned short int green,
+						const unsigned short int blue) {
 	// $intCode = red\times 256^2 + green \times 256 + blue$
 	return p.pixelBytes[red]*65536 + p.pixelBytes[green]*256
 			+ p.pixelBytes[blue];
@@ -117,7 +118,7 @@ unsigned int getIntCode(struct pixel p, unsigned short int red,
  * @param c the character to be checked
  * @return 1 if it is a RLE data character, 0 else
  */
-byte isRLEdata(char c) {
+byte isRLEdata(const char c) {
 	return ('0' <= c && c <= '9') || c == 'b' || c == 'o' || c == '$';
 }
 // >>>
@@ -127,7 +128,7 @@ byte isRLEdata(char c) {
  * @param intCode the int code of the color to be checked
  * @return 1 if the color is already allocated, 0 else
  */
-byte isAllocated(unsigned int intCode) {
+byte isAllocated(const unsigned int intCode) {
 	return allocatedColors[intCode].allocated == 1;
 }
 // >>>
@@ -144,19 +145,20 @@ byte isAllocated(unsigned int intCode) {
  * @param green the position of the green color code
  * @param blue the position of the blue color code
  */
-void affiche(Display *dpy, Window w, GC gc, struct pixel* tab,
-			unsigned int width, unsigned int height, unsigned short int red,
-			unsigned short int green, unsigned short int blue) {
+void affiche(Display *dpy, Window w, GC gc, const struct pixel* const tab,
+			const unsigned int width, const unsigned int height, 
+			const unsigned short int red, const unsigned short int green,
+			const unsigned short int blue) {
 	unsigned int i , j ;
 
 	for(i = 0 ; i < width ; i++) {
 		for(j = 0 ; j < height ; j++) {
-			struct pixel* p = &tab[i + (j*width)];
+			const struct pixel p = tab[i + (j*width)];
 
-			char* colorHexCode = getHexCode(*p, red, green, blue);
-			int   colorIntCode = getIntCode(*p, red, green, blue);
+			char* const colorHexCode = getHexCode(p, red, green, blue);
+			const int   colorIntCode = getIntCode(p, red, green, blue);
 			XColor color;
-			Colormap cmap = DefaultColormap(dpy, 0);
+			const Colormap cmap = DefaultColormap(dpy, 0);
 			XParseColor(dpy, cmap, colorHexCode, &color);
 			free(colorHexCode);
 
@@ -185,8 +187,8 @@ void affiche(Display *dpy, Window w, GC gc, struct pixel* tab,
  * @param tabWidth the width of the array
  * @param tabHeight the height of the array
  */
-void initRandomly(struct pixel* tab,unsigned int tabWidth,
-					unsigned int tabHeight) {
+void initRandomly(struct pixel* const tab, const unsigned int tabWidth,
+					const unsigned int tabHeight) {
 	unsigned int i,j;
 	for(i = 0 ; i < tabWidth * tabHeight ; ++i) {
 		if(rand() % 5) {
@@ -213,10 +215,11 @@ void initRandomly(struct pixel* tab,unsigned int tabWidth,
  * @param tabWidth the width of the array
  * @param tabHeight the height of the array
  */
-void initFromBMP(struct pixel* tab, FILE* f,
-					unsigned int pixelStart, unsigned int pixelEnd,
-					unsigned short int bpp, unsigned short int paddingSize,
-					unsigned int tabWidth, unsigned int tabHeight) {
+void initFromBMP(struct pixel* const tab, FILE* const f,
+					const unsigned int pixelStart, const unsigned int pixelEnd,
+					const unsigned short int bpp,
+					const unsigned short int paddingSize,
+					const unsigned int tabWidth, const unsigned int tabHeight) {
 
 	fseek(f, pixelStart, SEEK_SET);
 
@@ -247,10 +250,10 @@ void initFromBMP(struct pixel* tab, FILE* f,
  * @param tabWidth the width of the array
  * @param tabHeight the height of the array
  */
-void initFromRLE(struct pixel* tab, FILE* f,
-				unsigned int tabWidth, unsigned int tabHeight) {
+void initFromRLE(struct pixel* const tab, FILE* const f,
+				const unsigned int tabWidth, const unsigned int tabHeight) {
 	struct pixel* pattern;
-	struct pixel black = {{0, 0, 0, 0}};
+	const struct pixel black = {{0, 0, 0, 0}};
 	unsigned int patternWidth = 0, patternHeight = 0,
 				 x = 0, y = 0;
 
@@ -259,8 +262,8 @@ void initFromRLE(struct pixel* tab, FILE* f,
 	fseek(f, 0, SEEK_SET);
 
 	do {
-		unsigned int lineBeginPos = ftell(f);
-		char firstLineCharacter = fgetc(f);
+		const unsigned int lineBeginPos = ftell(f);
+		const char firstLineCharacter = fgetc(f);
 		if(firstLineCharacter == '#')
 			while(fgetc(f) != '\n');
 
@@ -337,8 +340,8 @@ void initFromRLE(struct pixel* tab, FILE* f,
 	} while(ftell(f) != end);
 
 	// Centering of the pattern in the window
-	unsigned int left = (tabWidth / 2) - (patternWidth / 2);
-	unsigned int top = (tabHeight / 2) - (patternHeight / 2);
+	const unsigned int left = (tabWidth / 2) - (patternWidth / 2);
+	const unsigned int top = (tabHeight / 2) - (patternHeight / 2);
 
 	for(x = 0 ; x < tabWidth ; ++x) {
 		for(y = 0 ; y < tabHeight ; ++y) {
@@ -362,7 +365,7 @@ void initFromRLE(struct pixel* tab, FILE* f,
  * @param colorMask the bitmask of the color
  * @return The position of the color
  */
-unsigned short int colorPosition(unsigned int colorMask) {
+unsigned short int colorPosition(const unsigned int colorMask) {
 	// $Position = \log_{256}\left(\dfrac{mask}{255}\right)$
 	return log(colorMask/255.)/log(256);
 }
@@ -378,8 +381,9 @@ unsigned short int colorPosition(unsigned int colorMask) {
  * @param blue the position of the blue color code
  * @return 1 if the pixel is considered "alive", 0 else
  */
-unsigned short int isAlive(struct pixel p, unsigned short int red,
-							unsigned short int green, unsigned short int blue) {
+unsigned short int isAlive(const struct pixel p, const unsigned short int red,
+							const unsigned short int green,
+							const unsigned short int blue) {
 	return !(p.pixelBytes[red] == 0 && p.pixelBytes[green] == 0
 			&& p.pixelBytes[blue] == 0);
 }
@@ -400,22 +404,23 @@ unsigned short int isAlive(struct pixel p, unsigned short int red,
  * @param blue the position of the blue color code
  * @return The number of neighbours of the given pixel
  */
-unsigned short int neighbourCount(struct pixel* tab,
-							unsigned int x, unsigned int y,
-							unsigned int tabWidth, unsigned int tabHeight,
-							unsigned short int red, unsigned short int green,
-							unsigned short int blue) {
-	unsigned int xStart = (x == 0)? 0 : x - 1,
-				yStart = (y == 0)? 0 : y - 1,
-				xEnd = (x == tabWidth - 1)? tabWidth - 1 : x + 1,
-				yEnd = (y == tabHeight - 1)? tabHeight - 1 : y + 1;
+unsigned short int neighbourCount(const struct pixel* const tab,
+									const unsigned int x, const unsigned int y,
+									const unsigned int tabWidth,
+									const unsigned int tabHeight,
+									const unsigned short int red,
+									const unsigned short int green,
+									const unsigned short int blue) {
+	const unsigned int xStart = (x == 0)? 0 : x - 1,
+						yStart = (y == 0)? 0 : y - 1,
+						xEnd = (x == tabWidth - 1)? tabWidth - 1 : x + 1,
+						yEnd = (y == tabHeight - 1)? tabHeight - 1 : y + 1;
 	unsigned short int count = 0;
 	for(unsigned int i = xStart ; i <= xEnd ; ++i)
 		for(unsigned int j = yStart ; j <= yEnd ; ++j)
-			if(isAlive(tab[i + (j * tabWidth)], red, green, blue)
-				&& !(i == x && j ==y))
+			if(isAlive(tab[i + (j * tabWidth)], red, green, blue))
 				++count;
-	return count;
+	return (isAlive(tab[x+(y*tabWidth)],red,green,blue))? count - 1 : count;
 }
 // >>>
 // Mix Neighbours Colors <<<
@@ -435,17 +440,19 @@ unsigned short int neighbourCount(struct pixel* tab,
  * @param blue the position of the blue color code
  * @return The mix of all the neighbours colors
  */
-struct pixel mixNeighbousColors(struct pixel* tab,
-							unsigned int x, unsigned int y,
-							unsigned int tabWidth, unsigned int tabHeight,
-							unsigned short int red, unsigned short int green,
-							unsigned short int blue) {
-    unsigned int xStart = (x == 0)? 0 : x - 1,
+struct pixel mixNeighbousColors(const struct pixel* const tab,
+								const unsigned int x, const unsigned int y,
+								const unsigned int tabWidth,
+								const unsigned int tabHeight,
+								const unsigned short int red,
+								const unsigned short int green,
+								const unsigned short int blue) {
+    const unsigned int xStart = (x == 0)? 0 : x - 1,
                  yStart = (y == 0)? 0 : y - 1,
                    xEnd = (x == tabWidth)? tabWidth : x + 1,
-                   yEnd = (y == tabHeight)? tabHeight : y + 1,
-                      n = 0;
-	unsigned short int count = neighbourCount(tab, x, y, tabWidth, tabHeight,
+                   yEnd = (y == tabHeight)? tabHeight : y + 1;
+	unsigned int n = 0;
+	const unsigned short int count = neighbourCount(tab, x, y, tabWidth, tabHeight,
 												red, green, blue);
 	unsigned short int redMean = 0, greenMean = 0, blueMean = 0;
 
@@ -458,13 +465,10 @@ struct pixel mixNeighbousColors(struct pixel* tab,
 				++n;
 			}
 
-	redMean /= count;
-	greenMean /= count;
-	blueMean /= count;
 	struct pixel mean;
-	mean.pixelBytes[red] = redMean;
-	mean.pixelBytes[green] = greenMean;
-	mean.pixelBytes[blue] = blueMean;
+	mean.pixelBytes[red] = redMean / count;
+	mean.pixelBytes[green] = greenMean / count;
+	mean.pixelBytes[blue] = blueMean / count;
 	return mean;
 }
 // >>>
@@ -489,14 +493,14 @@ struct pixel mixNeighbousColors(struct pixel* tab,
  * @param green the position of the green color code
  * @param blue the position of the blue color code
  */
-void nextStep(struct pixel* tab, unsigned int tabWidth, unsigned int tabHeight,
-			unsigned short int red, unsigned short int green,
-			unsigned short int blue) {
+void nextStep(struct pixel* const tab, const unsigned int tabWidth,
+			const unsigned int tabHeight, const unsigned short int red,
+			const unsigned short int green, const unsigned short int blue) {
 	struct pixel tabTmp[tabWidth * tabHeight];
 	// Tab in which the changes are made before applied
 	for(unsigned int i = 0 ; i < tabWidth ; i++) {
 		for(unsigned int j = 0 ; j < tabHeight ; j++) {
-			unsigned short int neighboursCount = neighbourCount(tab, i, j,
+			const unsigned short int neighboursCount = neighbourCount(tab, i, j,
 															tabWidth, tabHeight,
 															red, green, blue);
 			if(isAlive(tab[i + (j * tabWidth)], red, green, blue)) {
@@ -526,7 +530,7 @@ void nextStep(struct pixel* tab, unsigned int tabWidth, unsigned int tabHeight,
 }
 // >>>
 
-int main (int argc, char const* argv[]) {
+int main (int const argc, char const* argv[]) {
 
 	FILE* f;
 	unsigned short int bpp, red = 2, green = 1, blue = 0;
@@ -659,7 +663,7 @@ int main (int argc, char const* argv[]) {
 		// There is a padding column until the row reaches a multiple of 4 bytes
 		// $bytesPerRow = rowSize \times bytesPerPixel$
 		// $paddingSize = \begin{dcases*}0 & if $bytesPerRow \% 4 = 0$\\4 - (bytesPerRow \% 4) & else\end{dcases*}$
-		unsigned short int paddingSize = (4 - ((width * bpp) % 4) ) % 4;
+		const unsigned short int paddingSize = (4 - ((width * bpp) % 4) ) % 4;
 		// >>>
 		// Read pixel array
 		initFromBMP(pic, f, pixelStart, pixelEnd, bpp, paddingSize, width, height);
@@ -677,12 +681,12 @@ int main (int argc, char const* argv[]) {
 
 	// ====== X11 initialization ====== <<<
 	XEvent e;
-	Display *dpy = XOpenDisplay(NULL);
-	int noir = BlackPixel(dpy, DefaultScreen(dpy));
-	Window w = XCreateSimpleWindow(dpy, DefaultRootWindow(dpy), 0, 0,
+	Display* const dpy = XOpenDisplay(NULL);
+	const int noir = BlackPixel(dpy, DefaultScreen(dpy));
+	const Window w = XCreateSimpleWindow(dpy, DefaultRootWindow(dpy), 0, 0,
 			width, height, 0, noir, noir);
 	XMapWindow(dpy, w);
-	GC gc = XCreateGC(dpy,w,0,NULL);
+	const GC gc = XCreateGC(dpy,w,0,NULL);
 	XSelectInput(dpy, w, StructureNotifyMask);
 
 	while (e.type != MapNotify)
