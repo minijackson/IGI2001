@@ -146,7 +146,7 @@ byte isAllocated(const unsigned int intCode) {
  * @param blue the position of the blue color code
  */
 void affiche(Display *dpy, Window w, GC gc, const struct pixel* const tab,
-			const unsigned int width, const unsigned int height, 
+			const unsigned int width, const unsigned int height,
 			const unsigned short int red, const unsigned short int green,
 			const unsigned short int blue) {
 	unsigned int i , j ;
@@ -440,7 +440,7 @@ unsigned short int neighbourCount(const struct pixel* const tab,
  * @param blue the position of the blue color code
  * @return The mix of all the neighbours colors
  */
-struct pixel mixNeighbousColors(const struct pixel* const tab,
+struct pixel mixNeighboursColors(const struct pixel* const tab,
 								const unsigned int x, const unsigned int y,
 								const unsigned int tabWidth,
 								const unsigned int tabHeight,
@@ -515,7 +515,7 @@ void nextStep(struct pixel* const tab, const unsigned int tabWidth,
 			} else {
 				// Reproduction
 				if(neighboursCount == 3)
-					tabTmp[i + (j * tabWidth)] = mixNeighbousColors(tab, i, j,
+					tabTmp[i + (j * tabWidth)] = mixNeighboursColors(tab, i, j,
 															tabWidth, tabHeight,
 															red, green, blue);
 				else {
