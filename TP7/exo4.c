@@ -50,9 +50,9 @@ struct colorAllocation allocatedColors[COLOR_COUNT];
  */
 void printUsage(const char* programName) {
 	fprintf(stderr, "Usage:\n");
-	fprintf(stderr, "   %s --random [width height]\n", programName);
-	fprintf(stderr, "   %s --bmp file.bmp\n", programName);
-	fprintf(stderr, "   %s --rle file.rle\n", programName);
+	fprintf(stderr, "   %s --random [width height] [--toroidal]\n", programName);
+	fprintf(stderr, "   %s --bmp file.bmp [--toroidal]\n", programName);
+	fprintf(stderr, "   %s --rle file.rle [--toroidal]\n", programName);
 }
 // >>>
 // Get Hex Code <<<
@@ -408,6 +408,7 @@ unsigned short int neighbourCount(const struct pixel* const tab,
 									const unsigned int x, const unsigned int y,
 									const unsigned int tabWidth,
 									const unsigned int tabHeight,
+									const byte toroidal,
 									const unsigned short int red,
 									const unsigned short int green,
 									const unsigned short int blue) {
@@ -420,6 +421,30 @@ unsigned short int neighbourCount(const struct pixel* const tab,
 		for(unsigned int j = yStart ; j <= yEnd ; ++j)
 			if(isAlive(tab[i + (j * tabWidth)], red, green, blue))
 				++count;
+
+	if(toroidal) {
+		if(x == 0 || x == tabWidth - 1) {
+			const unsigned int wrapCol = (x == 0)? tabWidth - 1 : 0;
+			for(unsigned int i = yStart ; i <= yEnd ; ++i)
+				if(isAlive(tab[wrapCol + (i * tabWidth)], red, green, blue))
+					++count;
+		}
+
+		if(y == 0 || y == tabHeight - 1) {
+			const unsigned int wrapRow = (y == 0)? tabHeight - 1 : 0;
+			for(unsigned int i = xStart ; i <= xEnd ; ++i)
+				if(isAlive(tab[i + (wrapRow * tabWidth)], red, green, blue))
+					++count;
+		}
+
+		if((x == 0 || x == tabWidth - 1) && (y == 0 || y == tabHeight - 1)) {
+			const unsigned int wrapCol = (x == 0)? tabWidth - 1 : 0;
+			const unsigned int wrapRow = (y == 0)? tabHeight - 1 : 0;
+			if(isAlive(tab[wrapCol + (wrapRow * tabWidth)], red, green, blue))
+				++count;
+		}
+	}
+
 	return (isAlive(tab[x+(y*tabWidth)],red,green,blue))? count - 1 : count;
 }
 // >>>
@@ -444,6 +469,7 @@ struct pixel mixNeighboursColors(const struct pixel* const tab,
 								const unsigned int x, const unsigned int y,
 								const unsigned int tabWidth,
 								const unsigned int tabHeight,
+								const byte toroidal,
 								const unsigned short int red,
 								const unsigned short int green,
 								const unsigned short int blue) {
@@ -451,9 +477,8 @@ struct pixel mixNeighboursColors(const struct pixel* const tab,
                  yStart = (y == 0)? 0 : y - 1,
                    xEnd = (x == tabWidth)? tabWidth : x + 1,
                    yEnd = (y == tabHeight)? tabHeight : y + 1;
-	unsigned int n = 0;
 	const unsigned short int count = neighbourCount(tab, x, y, tabWidth, tabHeight,
-												red, green, blue);
+												toroidal, red, green, blue);
 	unsigned short int redMean = 0, greenMean = 0, blueMean = 0;
 
 	for(unsigned int i = xStart ; i <= xEnd ; ++i)
@@ -462,8 +487,39 @@ struct pixel mixNeighboursColors(const struct pixel* const tab,
 				redMean   += tab[i + (j * tabWidth)].pixelBytes[red];
 				greenMean += tab[i + (j * tabWidth)].pixelBytes[green];
 				blueMean  += tab[i + (j * tabWidth)].pixelBytes[blue];
-				++n;
 			}
+
+	if(toroidal) {
+		if(x == 0 || x == tabWidth - 1) {
+			const unsigned int wrapCol = (x == 0)? tabWidth - 1 : 0;
+			for(unsigned int i = yStart ; i <= yEnd ; ++i)
+				if(isAlive(tab[wrapCol + (i * tabWidth)], red, green, blue)) {
+					redMean   += tab[wrapCol + (i * tabWidth)].pixelBytes[red];
+					greenMean += tab[wrapCol + (i * tabWidth)].pixelBytes[green];
+					blueMean  += tab[wrapCol + (i * tabWidth)].pixelBytes[blue];
+				}
+		}
+
+		if(y == 0 || y == tabHeight - 1) {
+			const unsigned int wrapRow = (y == 0)? tabHeight - 1 : 0;
+			for(unsigned int i = xStart ; i <= xEnd ; ++i)
+				if(isAlive(tab[i + (wrapRow * tabWidth)], red, green, blue)) {
+					redMean   += tab[i + (wrapRow * tabWidth)].pixelBytes[red];
+					greenMean += tab[i + (wrapRow * tabWidth)].pixelBytes[green];
+					blueMean  += tab[i + (wrapRow * tabWidth)].pixelBytes[blue];
+				}
+		}
+
+		if((x == 0 || x == tabWidth - 1) && (y == 0 || y == tabHeight - 1)) {
+			const unsigned int wrapCol = (x == 0)? tabWidth - 1 : 0;
+			const unsigned int wrapRow = (y == 0)? tabHeight - 1 : 0;
+			if(isAlive(tab[wrapCol + (wrapRow * tabWidth)], red, green, blue)) {
+				redMean   += tab[wrapCol + (wrapRow * tabWidth)].pixelBytes[red];
+				greenMean += tab[wrapCol + (wrapRow * tabWidth)].pixelBytes[green];
+				blueMean  += tab[wrapCol + (wrapRow * tabWidth)].pixelBytes[blue];
+			}
+		}
+	}
 
 	struct pixel mean;
 	mean.pixelBytes[red] = redMean / count;
@@ -494,14 +550,16 @@ struct pixel mixNeighboursColors(const struct pixel* const tab,
  * @param blue the position of the blue color code
  */
 void nextStep(struct pixel* const tab, const unsigned int tabWidth,
-			const unsigned int tabHeight, const unsigned short int red,
-			const unsigned short int green, const unsigned short int blue) {
+			const unsigned int tabHeight, const byte toroidal,
+			const unsigned short int red, const unsigned short int green,
+			const unsigned short int blue) {
 	struct pixel tabTmp[tabWidth * tabHeight];
 	// Tab in which the changes are made before applied
 	for(unsigned int i = 0 ; i < tabWidth ; i++) {
 		for(unsigned int j = 0 ; j < tabHeight ; j++) {
 			const unsigned short int neighboursCount = neighbourCount(tab, i, j,
 															tabWidth, tabHeight,
+															toroidal,
 															red, green, blue);
 			if(isAlive(tab[i + (j * tabWidth)], red, green, blue)) {
 				// Loneliness and overcrowding
@@ -517,6 +575,7 @@ void nextStep(struct pixel* const tab, const unsigned int tabWidth,
 				if(neighboursCount == 3)
 					tabTmp[i + (j * tabWidth)] = mixNeighboursColors(tab, i, j,
 															tabWidth, tabHeight,
+															toroidal,
 															red, green, blue);
 				else {
 					tabTmp[i + (j * tabWidth)].pixelBytes[red]   = 0;
@@ -530,11 +589,12 @@ void nextStep(struct pixel* const tab, const unsigned int tabWidth,
 }
 // >>>
 
-int main (int const argc, char const* argv[]) {
+int main (int argc, char const* argv[]) {
 
 	FILE* f;
 	unsigned short int bpp, red = 2, green = 1, blue = 0;
 	unsigned int pixelStart, pixelEnd;
+	byte toroidal = 0;
 
 	for(int i = 0 ; i < COLOR_COUNT ; ++i)
 		allocatedColors[i].allocated = 0;
@@ -542,6 +602,14 @@ int main (int const argc, char const* argv[]) {
 	srand(time(NULL));
 
 	// ====== Check command-line usage ====== <<<
+	for(int i = 0 ; i < argc ; ++i) {
+		if(!strcmp(argv[i], "--toroidal")) {
+			toroidal = 1;
+			--argc;
+			break;
+		}
+	}
+
 	if(argc == 1 || argc > 4) {
 		printUsage(argv[0]);
 		return EX_USAGE;
@@ -695,8 +763,7 @@ int main (int const argc, char const* argv[]) {
 
 	affiche(dpy, w, gc, pic, width, height, red, green, blue);
 	for(;;) {
-		sleep(.5);
-		nextStep(pic, width, height, red, green, blue);
+		nextStep(pic, width, height, toroidal, red, green, blue);
 		affiche(dpy, w, gc, pic, width, height, red, green, blue);
 	}
 	sleep(5);
