@@ -130,7 +130,9 @@ largeur et à la hauteur de la fenêtre ne soient donnés après l'option
 (relatif ou absolu) d'une image sous le format BMP qui sera analysée et
 utilisée comme configuration initiale pour le Jeu de la Vie ou encore l'option
 \texttt{----rle} suivit d'un chemin d'un fichier \texttt{.rle} contenant des
-données RLE d'un motif du Jeu de la Vie (cf.~\ref{ssec-rle}).
+données RLE d'un motif du Jeu de la Vie (cf.~\ref{ssec-rle}). Il est aussi
+possible d'activer le monde toroïdal (cf.~\ref{ssec-tor}) en ajoutant l'option
+\texttt{----toroidal} à la fin de la ligne de commande.
 
 \subsection{Analyse d'un fichier BMP}
 
@@ -316,7 +318,7 @@ compteur.
 symbole ``!'' qui sous entend comme le symbole ``\$'' que le reste des
 ``cellules'' sont des ``cellules mortes''.
 
-\subsection{Allocation des couleurs}
+\subsection{Allocation des couleurs}\label{ssec-col}
 
 \paragraph{} Afin de ne pas allouer à nouveau de la mémoire pour des couleurs
 ayant de la mémoire déjà allouée, la variable globale
@@ -326,6 +328,97 @@ chiffre, 1 si la couleur a déjà de la mémoire allouée, 0 sinon. Le tableau e
 trié de telle manière que l'élément n°$n \in \left\ldbrack0 ;
 256^3\right\ldbrack$ soit la couleur \texttt{\#XXXXXX} avec \texttt{XXXXXX} la
 représentation de $n$ en base $16$.
+
+\subsection{Monde toroïdal}\label{ssec-tor}
+
+\paragraph{} Puisque le programme ne supporte pas le fait d'avoir un monde
+infini ou extensible à l'infini, il a été décidé que toutes cellules hors du
+tableau sont considérées comme ``mortes''. Cependant, une alternative est
+possible : il s'agit de considéré le tableau à deux dimension contenant les
+cellules (ou le monde) comme toroïdal, c'est à dire que les bords du tableau
+sont connectées. Ainsi, une cellule située à la bordure droite du monde peut
+influencer une cellule à la bordure gauche. Afin d'arriver à ces fins, des
+conditions ont été rajoutées dans la fonction du calcul du nombre de voisins et
+dans la fonctions calculant le mélange des couleurs des cellules voisines. Afin
+d'activer ce type de monde, l'option ligne de commande \texttt{----toroidal} a
+été rajoutée.
+
+\section{Bugs / améliorations possibles}
+
+\subsection{Performances}
+
+\paragraph{} Malgré le fait que les couleurs ne soient allouées qu'une seule
+fois (cf.~\ref{ssec-col}) l'allocation des couleurs prends beaucoup de temps,
+impliquant que le fait d'allouer une couleur uniquement lorsqu'elle est
+nouvelle au moment de l'affichage fait baisser les performances du programmes.
+
+\paragraph{} Une autre manière d'améliorer les performances du programme serait
+d'utiliser le multi-threading pour le calcul du ``lendemain'' en divisant le
+tableau en plusieurs parties. Cependant, cette amélioration pourrait se trouver
+coûteuse en mémoire : en effet, afin que les tableaux résultant de chaque
+thread n'influence pas les threads toujours en train de traiter le tableau, il
+faudrait faire une copie du tableau original pour chaque thread. Un autre
+manière de contrer ce problème serait de recalculer le lendemain pour les
+parties critiques. En effet, puisque le traitement tableau est divisé, la
+``mauvaise influence'' des autres threads n'est possible qu'au bordures de ces
+divisions (d'autant plus si le monde est toroïdal).
+
+\subsection{Monde toroïdal}
+
+\paragraph{} Un bug est présent lorsque l'option \texttt{----toroidal} est
+activé, il s'agit du mauvais calcul du mélange des couleurs des voisins
+lorsqu'une ``cellule naissante'' naît sur une bordure avec des parents de
+l'autre côté de la bordure. Biens que le calcul du mélange ne soit pas correct,
+les couleurs restent cohérentes entre elles (elles ne sont pas pour autant
+aléatoires).
+
+\subsection{Format RLE}
+
+\paragraph{} L'implémentation du format RLE dans le programme supporte la
+taille du motif. Cependant, lorsque la taille du motif est supérieure à la
+taille de la fenêtre par défaut ($200\times200$), rien n'est affiché.
+
+\paragraph{} Certaines fonctionnalités du format RLE, comme les définitions des
+règles pour le jeu de la vie, ou encore les coordonnées du coins haut gauche,
+ne sont pas implémentées.
+
+\subsection{Ligne de commande}
+
+\paragraph{} Les options de la lignes de commandes ne sont pas échangeables
+avec l'option \texttt{----toroidal}. Par exemple, la ligne \texttt{./exo4.bin
+----toroidal ----random} ne marchera pas.
+
+\subsection{Boucle infinie}
+
+\paragraph{} La boucle infinie utilisée n'est pas pseudo-infinie, impliquant
+que pour quitter le programme, il faut soit lui envoyer un signal
+\texttt{SIGINT}, \texttt{SIGTERM} ou \texttt{SIGKILL} ou encore fermer la
+fenêtre affichant le jeu de la vie, ce qui fera quitter le programme avec une
+erreur. Une manière de palier à cela serait d'écouter des XEvents et d'attendre
+l'appui d'une touche particulière (par exemple \texttt{q}) ou encore de gérer
+la fermeture de la fenêtre de manière plus orthodoxe.
+
+\subsection{Affichage}
+
+\paragraph{} Il arrive que la librairie X11 refuse d'exécuter une requête (ce
+qui se voit avec le message d'erreur lorsque la fenêtre X11 est fermée), ce qui
+aura pour conséquence des pixels qui auront leurs état inchangé.  Par exemple,
+une cellule vivante auparavant qui doit mourir sera toujours affichée comme
+vivante si X11 refuse d'accéder à la requête et inversement. Il faudrait donc
+trouver un moyen de détecter si X11 a bien exécute la requête en cours et si
+non, la réitérer.
+
+\paragraph{} Au niveau de la fréquence d'images par secondes (fps), elle est
+déterminée par la performance du programme. Cela implique que la vitesse de
+changement d'état n'est pas forcément constante et c'est d'autant plus vrai car
+le nombre de couleurs déjà allouées augmente drastiquement au cours du
+programme, augmentent par la suite le nombre d'image par seconde au cours du
+temps. Afin de régler ce problème, l'utilisation de
+\lstinline[style=prog]|nanosleep| est possible (bien plus précise que
+\lstinline[style=prog]|sleep|) ou encore mieux, faire une difference de
+timestamp en millisecondes (avec la structure retournée par
+\lstinline[style=prog]|gettimeofday|) pour assurer une fréquence d'image
+constante quand bien même avec des calculs de durée différente. 
 
 \end{document}
 % vim: spelllang=fr:spell
