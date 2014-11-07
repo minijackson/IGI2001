@@ -68,7 +68,7 @@ void printUsage(const char* programName) {
  */
 char* getHexCode(const struct pixel p, const unsigned short int red,
 				const unsigned short int green, const unsigned short int blue) {
-	char* colorHexCode = (char*)malloc(8*sizeof(char));
+	static char colorHexCode[8];
 	char redHexCode[3], greenHexCode[3], blueHexCode[3];
 	if(p.pixelBytes[red] < 0x10)
 		sprintf(redHexCode, "0%X", p.pixelBytes[red]);
@@ -160,7 +160,6 @@ void affiche(Display *dpy, Window w, GC gc, const struct pixel* const tab,
 			XColor color;
 			const Colormap cmap = DefaultColormap(dpy, 0);
 			XParseColor(dpy, cmap, colorHexCode, &color);
-			free(colorHexCode);
 
 			if(!isAllocated(colorIntCode)) {
 				XAllocColor(dpy, cmap, &color);
