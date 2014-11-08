@@ -6,3 +6,5 @@ tags
 *.log
 *.bin
 *.swp
+*.toc
+*.o
