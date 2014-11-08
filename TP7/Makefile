@@ -25,7 +25,7 @@ endif
 
 all: $(EXECS) exo4.bin
 
-doc: outs report
+doc: outs rapport.pdf
 
 exo1.bin: exo1.c
 	$(CC) $(CFLAGS) $< -o $@
@@ -39,7 +39,7 @@ exo3.bin: exo3.c
 exo4.bin: exo4.c
 	$(CC) $(CFLAGS) $< -o $@ $(X11LIB) $(X11FLAGS) $(MATHFLAGS)
 
-report: rapport.tex outs $(SOURCES) exo4.c
+rapport.pdf: rapport.tex outs $(SOURCES) exo4.c
 	$(TEX) rapport.tex
 	$(TEX) rapport.tex
 
@@ -61,6 +61,6 @@ clean:
 	rm *.bin *.pdf *.aux *.log *.out* *.toc *.tar.gz
 
 tarball: doc
-	tar zcvf $(notdir $(shell pwd)).tar.gz exo* *.pdf *.tex Makefile
+	tar zcvf $(notdir $(shell pwd)).tar.gz exo* *.pdf *.tex Makefile rle/*.rle bmp/*.bmp
 
 .PHONY: all doc clean tarball outs
