@@ -6,6 +6,7 @@
 #include <sysexits.h>
 #include <math.h>
 #include <time.h>
+#include <pthread.h>
 
 #ifndef DEFAULT_WIDTH
 //! @brief The width used if "--random" is given in the program parameters
@@ -19,6 +20,7 @@
 
 //! @brief 16 millions colors in the RRGGBB color space
 #define COLOR_COUNT 16777216
+#define THREADS_COUNT 4
 
 enum programMode {
 	random,
@@ -32,6 +34,19 @@ typedef unsigned char byte;
 struct pixel {
 	//! The 3 bytes of colors of the pixel (in the order of the BMP file)
 	byte pixelBytes[4];
+};
+
+struct ThreadData {
+	struct pixel* tab;
+	unsigned int tabWidth;
+	unsigned int tabHeight;
+	unsigned int xStart;
+	unsigned int xEnd;
+	unsigned int yStart;
+	unsigned int yEnd;
+	unsigned int red;
+	unsigned int green;
+	unsigned int blue;
 };
 
 //! @brief A structure containing an allocated color
@@ -489,40 +504,47 @@ struct pixel mixNeighbousColors(struct pixel* tab,
  * @param green the position of the green color code
  * @param blue the position of the blue color code
  */
-void nextStep(struct pixel* tab, unsigned int tabWidth, unsigned int tabHeight,
-			unsigned short int red, unsigned short int green,
-			unsigned short int blue) {
-	struct pixel tabTmp[tabWidth * tabHeight];
+void* nextStep(struct ThreadData* data) {
+	struct pixel* tabTmp = malloc(data->tabWidth * data->tabHeight * sizeof(struct pixel));
 	// Tab in which the changes are made before applied
-	for(unsigned int i = 0 ; i < tabWidth ; i++) {
-		for(unsigned int j = 0 ; j < tabHeight ; j++) {
-			unsigned short int neighboursCount = neighbourCount(tab, i, j,
-															tabWidth, tabHeight,
-															red, green, blue);
-			if(isAlive(tab[i + (j * tabWidth)], red, green, blue)) {
+	for(unsigned int i = data->xStart ; i < data->xEnd ; i++) {
+		for(unsigned int j = data->yStart ; j < data->yEnd ; j++) {
+			unsigned short int neighboursCount = neighbourCount(data->tab, i, j,
+															data->tabWidth,
+															data->tabHeight,
+															data->red,
+															data->green,
+															data->blue);
+			if(isAlive(data->tab[i + (j * data->tabWidth)],
+						data->red, data->green, data->blue)) {
 				// Loneliness and overcrowding
 				if(neighboursCount < 2 || neighboursCount > 3) {
-					tabTmp[i + (j * tabWidth)].pixelBytes[red]   = 0;
-					tabTmp[i + (j * tabWidth)].pixelBytes[green] = 0;
-					tabTmp[i + (j * tabWidth)].pixelBytes[blue]  = 0;
+					tabTmp[i + (j * data->tabWidth)].pixelBytes[data->red]   = 0;
+					tabTmp[i + (j * data->tabWidth)].pixelBytes[data->green] = 0;
+					tabTmp[i + (j * data->tabWidth)].pixelBytes[data->blue]  = 0;
 				} else
-					tabTmp[i + (j * tabWidth)] = tab[i + (j * tabWidth)];
+					tabTmp[i + (j * data->tabWidth)] = data->tab[i + (j * data->tabWidth)];
 
 			} else {
 				// Reproduction
 				if(neighboursCount == 3)
-					tabTmp[i + (j * tabWidth)] = mixNeighbousColors(tab, i, j,
-															tabWidth, tabHeight,
-															red, green, blue);
+					tabTmp[i + (j * data->tabWidth)] = mixNeighbousColors(data->tab,
+																	i, j,
+																data->tabWidth,
+																data->tabHeight,
+																data->red,
+																data->green,
+																data->blue);
 				else {
-					tabTmp[i + (j * tabWidth)].pixelBytes[red]   = 0;
-					tabTmp[i + (j * tabWidth)].pixelBytes[green] = 0;
-					tabTmp[i + (j * tabWidth)].pixelBytes[blue]  = 0;
+					tabTmp[i + (j * data->tabWidth)].pixelBytes[data->red]   = 0;
+					tabTmp[i + (j * data->tabWidth)].pixelBytes[data->green] = 0;
+					tabTmp[i + (j * data->tabWidth)].pixelBytes[data->blue]  = 0;
 				}
 			}
 		}
 	}
-	memcpy(tab, tabTmp, sizeof(struct pixel) * tabWidth * tabHeight);
+	memcpy(data->tab, tabTmp, data->tabWidth*data->tabHeight*sizeof(struct pixel));
+	return NULL;
 }
 // >>>
 
@@ -650,7 +672,7 @@ int main (int argc, char const* argv[]) {
 		// >>>
 	}
 
-	struct pixel pic[width*height];
+	struct pixel* pic = malloc(width*height*sizeof(struct pixel));
 
 	if(mode == bmp) {
 		// BMP <<<
@@ -690,9 +712,40 @@ int main (int argc, char const* argv[]) {
 	// >>>
 
 	affiche(dpy, w, gc, pic, width, height, red, green, blue);
+
+	pthread_t threads[THREADS_COUNT];
+	struct ThreadData data[THREADS_COUNT];
+	unsigned short int tasksPerThread = ((width)+THREADS_COUNT - 1)/THREADS_COUNT;
 	for(;;) {
 		sleep(.5);
-		nextStep(pic, width, height, red, green, blue);
+		for(unsigned int i = 0 ; i < THREADS_COUNT ; ++i) {
+			data[i].tab = malloc(width*height*sizeof(struct pixel));
+			memcpy(data[i].tab, pic, width*height*sizeof(struct pixel));
+			data[i].tabWidth = width;
+			data[i].tabHeight = height;
+			data[i].xStart = i*tasksPerThread;
+			data[i].xEnd = (i+1)*tasksPerThread;
+			data[i].yStart = 0;
+			data[i].yEnd = height;
+			data[i].red = red;
+			data[i].green = green;
+			data[i].blue = blue;
+		}
+		data[THREADS_COUNT - 1].xEnd = width;
+		data[THREADS_COUNT - 1].yEnd = height;
+		for(unsigned int i = 0 ; i < THREADS_COUNT ; ++i) {
+			pthread_create(&threads[i], NULL, nextStep, &data[i]);
+		}
+
+		for(unsigned int i = 0 ; i < THREADS_COUNT ; ++i) {
+			pthread_join(threads[i], NULL);
+		}
+		for(unsigned int i = 0 ; i < THREADS_COUNT ; ++i) {
+			for(unsigned int j = data->xStart ; j < data->xEnd ; j++)
+				for(unsigned int k = data[i].yStart ; k < data[i].yEnd ; k++)
+					pic[j + (k*width)] = data[i].tab[j + (k*width)];
+		}
+
 		affiche(dpy, w, gc, pic, width, height, red, green, blue);
 	}
 	sleep(5);
