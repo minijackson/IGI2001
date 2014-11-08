@@ -334,12 +334,12 @@ représentation de $n$ en base $16$.
 \paragraph{} Puisque le programme ne supporte pas le fait d'avoir un monde
 infini ou extensible à l'infini, il a été décidé que toutes cellules hors du
 tableau sont considérées comme ``mortes''. Cependant, une alternative est
-possible : il s'agit de considéré le tableau à deux dimension contenant les
-cellules (ou le monde) comme toroïdal, c'est à dire que les bords du tableau
+possible : il s'agit de considérer le tableau à deux dimensions contenant les
+cellules (ou le monde) comme toroïdal, c'est-à-dire que les bords du tableau
 sont connectées. Ainsi, une cellule située à la bordure droite du monde peut
 influencer une cellule à la bordure gauche. Afin d'arriver à ces fins, des
 conditions ont été rajoutées dans la fonction du calcul du nombre de voisins et
-dans la fonctions calculant le mélange des couleurs des cellules voisines. Afin
+dans la fonction calculant le mélange des couleurs des cellules voisines. Afin
 d'activer ce type de monde, l'option ligne de commande \texttt{----toroidal} a
 été rajoutée.
 
@@ -402,23 +402,23 @@ la fermeture de la fenêtre de manière plus orthodoxe.
 
 \paragraph{} Il arrive que la librairie X11 refuse d'exécuter une requête (ce
 qui se voit avec le message d'erreur lorsque la fenêtre X11 est fermée), ce qui
-aura pour conséquence des pixels qui auront leurs état inchangé.  Par exemple,
+aura pour conséquence des pixels qui auront leur état inchangé. Par exemple,
 une cellule vivante auparavant qui doit mourir sera toujours affichée comme
 vivante si X11 refuse d'accéder à la requête et inversement. Il faudrait donc
-trouver un moyen de détecter si X11 a bien exécute la requête en cours et si
+trouver un moyen de détecter si X11 a bien exécuté la requête en cours et si
 non, la réitérer.
 
 \paragraph{} Au niveau de la fréquence d'images par secondes (fps), elle est
 déterminée par la performance du programme. Cela implique que la vitesse de
 changement d'état n'est pas forcément constante et c'est d'autant plus vrai car
-le nombre de couleurs déjà allouées augmente drastiquement au cours du
-programme, augmentent par la suite le nombre d'image par seconde au cours du
+le nombre de couleurs déjà allouées augmente considérablement au cours du
+programme, augmentent par la suite le nombre d'images par seconde au cours du
 temps. Afin de régler ce problème, l'utilisation de
 \lstinline[style=prog]|nanosleep| est possible (bien plus précise que
-\lstinline[style=prog]|sleep|) ou encore mieux, faire une difference de
+\lstinline[style=prog]|sleep|) ou encore mieux, faire une différence de
 timestamp en millisecondes (avec la structure retournée par
 \lstinline[style=prog]|gettimeofday|) pour assurer une fréquence d'image
-constante quand bien même avec des calculs de durée différente. 
+constante quand bien même avec des calculs de durée différente.
 
 \end{document}
 % vim: spelllang=fr:spell

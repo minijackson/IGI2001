@@ -41,7 +41,13 @@ exo4.bin: exo4.c
 
 rapport.pdf: rapport.tex outs $(SOURCES) exo4.c
 	$(TEX) rapport.tex
-	$(TEX) rapport.tex
+	latex_count=8 ; \
+	while egrep -s 'Rerun (LaTeX|to get cross-references right)' rapport.log && [ $$latex_count -gt 0 ] ;\
+		do \
+			echo "Rerunning latex...." ;\
+			$(TEX) rapport.tex ;\
+			latex_count=`expr $$latex_count - 1` ;\
+	done
 
 outs: $(EXECS:%.bin=%.out) exo4.out.png
 
