@@ -6,13 +6,18 @@
 
 #define true 1
 #define false 0
+#define bool unsigned char
 
 void goUpLine() {
 	printf("\033[A\033[2K");
 	rewind(stdout);
 }
 
-unsigned char containsLetter(char const* const word,
+bool validLetter(char const letter) {
+	return 'a' <= letter && letter <= 'z';
+}
+
+bool containsLetter(char const* const word,
 							char const letter,
 							unsigned int length) {
 	for(unsigned int i = 0 ; i < length ; ++i) {
@@ -25,8 +30,8 @@ unsigned char containsLetter(char const* const word,
 int main() {
 	srand(time(NULL));
 
-	unsigned char win = 0;
-	unsigned char lose = 0;
+	bool win = 0;
+	bool lose = 0;
 	unsigned short int remainingTries = 10;
 
 	unsigned int wordsInFile = countWords("dict.txt");
@@ -42,11 +47,14 @@ int main() {
 	triedLetters[25] = ' ';
 	unsigned int position = 0;
 
-	unsigned char alreadyTried = false;
+	bool alreadyTried = false;
+	bool invalidCharacter = false;
 
 	while(!(win || lose)) {
 		if(alreadyTried)
 			printf("You already tried it!\n");
+		else if(invalidCharacter)
+			printf("Invalid character\n");
 		else
 			printf("\n");
 		printf("%s\n", hiddenWord);
@@ -58,7 +66,8 @@ int main() {
 		printf("\n");
 		if(containsLetter(triedLetters, c, 26)) {
 			alreadyTried = true;
-		} else {
+			invalidCharacter = false;
+		} else if(validLetter(c)) {
 			if(containsLetter(gameWord, c, wordLength)) {
 				for(unsigned short int i = 0 ; i < wordLength ; ++i) {
 					if(gameWord[i] == c)
@@ -69,6 +78,10 @@ int main() {
 			}
 			triedLetters[position] = c;
 			++position;
+			invalidCharacter = false;
+			alreadyTried = false;
+		} else {
+			invalidCharacter = true;
 			alreadyTried = false;
 		}
 		if(!containsLetter(hiddenWord, '_', wordLength))
@@ -79,6 +92,8 @@ int main() {
 			for(unsigned int i = 0 ; i <= 4 ; ++i) {
 				goUpLine();
 			}
+			if(c == '\n')
+				goUpLine();
 		}
 	}
 
