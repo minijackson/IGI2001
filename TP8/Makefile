@@ -6,7 +6,7 @@ DEBUG_CFLAGS   = -O -g
 RELEASE_CFLAGS = -O2
 SOURCES        = $(wildcard *.c)
 EXECS          = $(SOURCES:%.c= %.bin)
-DEPS           = utils.c
+DEPS           = lib/utils.c
 X11LIB         = `pkg-config --libs x11`
 X11FLAGS       = `pkg-config --cflags x11`
 MATHFLAGS      = -lm
@@ -22,7 +22,7 @@ profile: CFLAGS += $(PROFILE_CFLAGS)
 
 doc: outs rapport.pdf
 
-%.o: %.c
+.o: .c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 %.bin: %.o $(DEPS)
@@ -35,7 +35,13 @@ outs: $(EXECS:%.bin=%.out)
 
 rapport.pdf: rapport.tex outs $(SOURCES)
 	$(TEX) rapport.tex
-	$(TEX) rapport.tex
+	latex_count=8 ; \
+	while egrep -s 'Rerun (LaTeX|to get cross-references right)' rapport.log && [ $$latex_count -gt 0 ] ;\
+		do \
+			echo "Rerunning latex...." ;\
+			$(TEX) rapport.tex ;\
+			latex_count=`expr $$latex_count - 1` ;\
+	done
 
 clean:
 	rm *.o *.bin *.pdf *.aux *.log *.out* *.toc *.tar.gz
