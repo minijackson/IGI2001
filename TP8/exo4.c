@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "utils.h"
+#include "lib/utils.h"
 
-int main () {
+int main() {
 	srand(time(NULL));
 
 	const char* const word[30];

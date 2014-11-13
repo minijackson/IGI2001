@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "utils.h"
+#include "lib/utils.h"
 
 int main() {
 	srand(time(NULL));

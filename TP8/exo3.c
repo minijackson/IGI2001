@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "utils.h"
+#include "lib/utils.h"
 
 int main() {
 	const char* const str = "dict.txt";
