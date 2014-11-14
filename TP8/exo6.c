@@ -54,19 +54,19 @@ int main() {
 	char ch;
 
 	while(!(win || lose)) {
-		if(alreadyTried)
-			printf("You already tried it!\n");
-		else if(invalidCharacter)
-			printf("Invalid character\n");
-		else
-			printf("\n");
-		
 		sprintf(filename, "pics/%d.txt", 11 - remainingTries);
 		FILE* f = fopen(filename, "r");
 
 		while((ch = fgetc(f)) != EOF) {
 			putchar(ch);
 		}
+
+		if(alreadyTried)
+			printf("You already tried it!\n");
+		else if(invalidCharacter)
+			printf("Invalid character\n");
+		else
+			printf("\n");
 
 		printf("%s\n", hiddenWord);
 		printf("Tried letters: %s\n", triedLetters);
