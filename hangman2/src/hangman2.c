@@ -5,6 +5,8 @@
 #include <string.h>
 #include <time.h>
 #include <sysexits.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <getopt.h>
 
 #ifdef HAVE__BOOL
@@ -15,7 +17,32 @@
 #	define false 0
 #endif
 
+// Convert a macro to a string containing the macro expansion
+#define STR_EXPAND(macro) #macro
+#define STR(macro) STR_EXPAND(macro)
+
 #include "lib/utils.h"
+
+bool havePicsFile = true;
+
+void checkPicsFile() {
+	char const* const dirname = STR(DATADIR) "/" PACKAGE;
+	struct stat st;
+	if(stat(dirname, &st) == 0) {
+		for(unsigned int i = 1 ; i <= 10 ; ++i) {
+			char filename[12];
+			sprintf(filename, STR(DATADIR) "/" PACKAGE "/%d.txt", i);
+			printf(STR(DATADIR) "/" PACKAGE "/%d.txt\n", i);
+			// Check if file exists
+			if(access(filename, F_OK) != -1) {
+				havePicsFile = false;
+				return;
+			}
+		}
+		havePicsFile = true;
+	} else
+		havePicsFile = false;
+}
 
 void goUpLine() {
 	printf("\033[A\033[2K");
@@ -40,10 +67,10 @@ void printHelp(char const* const progName) {
 	printf(PACKAGE_STRING "\n");
 	printf("Usage: %s [OPTION]\n\n", progName);
 	printf("Options\n\n");
-	printf(" -h, --help           display this help and exit\n");
-	printf(" -v, --version        display version information and exit\n");
-	printf(" --dictionnary=file   use 'file' as dictionnry for random words\n\n");
-	printf("Report bugs to <" PACKAGE_BUGREPORT ">.\n\n");
+	printf(" -h,      --help               display this help and exit\n");
+	printf(" -v,      --version            display version information and exit\n");
+	printf(" -d file, --dictionnary file   use 'file' as dictionnary for random words\n\n");
+	printf("Report bugs to <" PACKAGE_BUGREPORT ">.\n");
 }
 
 void printVersion() {
@@ -51,14 +78,13 @@ void printVersion() {
 }
 
 int main(int const argc, char ** const argv) {
-	printf("DATADIR \n");
 
 	char wordsFile[255] = "/usr/share/dict/french";
 
 	static struct option longOptions[] = {
-		{"help"       , no_argument      , 0, 'h'}, 
-		{"version"    , no_argument      , 0, 'v'}, 
-		{"dictionnary", required_argument, 0, 'd'}, 
+		{"help"       , no_argument      , 0, 'h'},
+		{"version"    , no_argument      , 0, 'v'},
+		{"dictionnary", required_argument, 0, 'd'},
 		{0            , 0                , 0,  0 }
 	};
 
@@ -109,6 +135,7 @@ int main(int const argc, char ** const argv) {
 	bool alreadyTried = false;
 	bool invalidCharacter = false;
 
+	checkPicsFile();
 	char filename[12] = "pics/nn.txt";
 	char ch;
 
