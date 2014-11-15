@@ -1,0 +1,17 @@
+-*- text -*-
+
+Hangman
+
+Hangman is a thrilling game about guessing words in order to prevent a man
+from being hanged.
+
+Mail suggestions to remi.nicole@edu.esiee.fr, report bugs to
+remi.nicole@edu.esiee.fr, and submit patches to remi.nicole@edu.esiee.fr.
+Always include the Hangman version number, which you can get by
+running `hangman --version'.
+
+Be sure to read BUGS and INSTALL.
+
+Licensing
+
+Hangman is released under the MIT License (MIT).

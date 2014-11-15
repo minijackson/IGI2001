@@ -1,0 +1,9 @@
+Hangman NEWS - User visible changes
+
+* Hangman project started.
+
+** Displays picture of a hanged man while loosing.
+
+** Displays already tried characters.
+
+** Displays when an invalid character is inputted.

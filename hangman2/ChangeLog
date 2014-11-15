@@ -1,0 +1,21 @@
+2012-11-14  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
+
+	Now display the errors after the picture.
+	* hangman.c (main): Change the order of display for the
+	picture display an error display.
+
+2012-11-14  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
+
+	Adding pictures in the Hangman game.
+	* pics/: Now contains the pictures of the game.
+
+2012-11-13  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
+
+	Adding support for handling special characters.
+	* hangman.c (main): Check if the inputted character is a
+	special character and print an error message if so.
+
+2012-11-13  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
+
+	Adding beginning of Hangman game.
+	* hangman.c: Main source file.
