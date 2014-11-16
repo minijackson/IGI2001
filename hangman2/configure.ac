@@ -1,4 +1,4 @@
-AC_INIT([Hangman2], [1.0], [remi.nicole@edu.esiee.fr])
+AC_INIT([Hangman2], [1.3], [remi.nicole@edu.esiee.fr])
 AM_INIT_AUTOMAKE([-Wall -Werror subdir-objects gnits])
 
 AC_PROG_CC_C99

@@ -1,9 +1,24 @@
 Hangman NEWS - User visible changes
 
-* Hangman project started.
+Release 1.3
 
-** Displays picture of a hanged man while loosing.
+  * Installing default modifiable pictures into 'datadir'/hangman2
 
-** Displays already tried characters.
+Release 1.2
 
-** Displays when an invalid character is inputted.
+  * Finishing support for checking if the current system
+    has pictures of the hanged man to display.
+
+Release 1.1
+
+  * Documentation added
+
+Release 1.0
+
+  * Hangman project started.
+
+    ** Displays picture of a hanged man while loosing.
+
+    ** Displays already tried characters.
+
+    ** Displays when an invalid character is inputted.

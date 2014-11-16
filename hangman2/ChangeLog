@@ -1,7 +1,31 @@
+2012-11-16  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
+
+	Now installs default pictures of hanged man on the
+	system when `make install'.
+
+2012-11-16  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
+
+	* hangman2.c: Finishing checks for system hanged man
+	pictures.
+
+2012-11-16  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
+
+	* configure.ac: Fixing warning on recent version of autoconf
+	by adding subdir-objects to AM_INIT_AUTOMAKE
+
+2012-11-15  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
+
+	* hangman2.c: Adding beginning of checks for system hanged
+	man pictures.
+
+2012-11-15  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
+
+	Adding README, report.tex and report.pdf documentation.
+
 2012-11-14  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
 
 	Now display the errors after the picture.
-	* hangman.c (main): Change the order of display for the
+	* hangman2.c (main): Change the order of display for the
 	picture display an error display.
 
 2012-11-14  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
@@ -12,10 +36,10 @@
 2012-11-13  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
 
 	Adding support for handling special characters.
-	* hangman.c (main): Check if the inputted character is a
+	* hangman2.c (main): Check if the inputted character is a
 	special character and print an error message if so.
 
 2012-11-13  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
 
 	Adding beginning of Hangman game.
-	* hangman.c: Main source file.
+	* hangman2.c: Main source file.
