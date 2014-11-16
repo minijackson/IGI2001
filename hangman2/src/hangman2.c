@@ -23,18 +23,34 @@
 
 #include "lib/utils.h"
 
-bool havePicsFile = true;
+struct picture {
+	char* str;
+	unsigned short int height;
+};
+
+bool havePicsFile = false;
+char const* const hardcodedPictures[] = {
+	"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+	"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n      ________________________________\n     /                                /|\n    /                                / |\n   /                                /  |\n  /                                /   |\n /                                /    |\n/________________________________/     |\n|                                |    /\n|                                |   /\n|                                |  /\n|                                | /\n|________________________________|/\n",
+	"\n                   __\n                  /  \\\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n      ____________|  |________________\n     /            |  |                /|\n    /             |  |               / |\n   /              |__|              /  |\n  /                                /   |\n /                                /    |\n/________________________________/     |\n|                                |    /\n|                                |   /\n|                                |  /\n|                                | /\n|________________________________|/\n",
+	"                    ___________________________________\n                   /  _________________________________)\n                  /  /  / /\n                  |  | / /\n                  |  |/ /\n                  |  | /\n                  |  |/\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n      ____________|  |________________\n     /            |  |                /|\n    /             |  |               / |\n   /              |__|              /  |\n  /                                /   |\n /                                /    |\n/________________________________/     |\n|                                |    /\n|                                |   /\n|                                |  /\n|                                | /\n|________________________________|/\n",
+	"                    ___________________________________\n                   /  _________________________) )_____)\n                  /  /  / /                    | |\n                  |  | / /                     | |\n                  |  |/ /                      | |\n                  |  | /                       | |\n                  |  |/                        | |\n                  |  |                      ()(_)()\n                  |  |                    ()       ()\n                  |  |                   ()  X   X ()\n                  |  |                   ()(\\  __  ()\n                  |  |                    ()(\\_____|)\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n                  |  |\n      ____________|  |________________\n     /            |  |                /|\n    /             |  |               / |\n   /              |__|              /  |\n  /                                /   |\n /                                /    |\n/________________________________/     |\n|                                |    /\n|                                |   /\n|                                |  /\n|                                | /\n|________________________________|/\n",
+	"                    ___________________________________\n                   /  _________________________) )_____)\n                  /  /  / /                    | |\n                  |  | / /                     | |\n                  |  |/ /                      | |\n                  |  | /                       | |\n                  |  |/                        | |\n                  |  |                      ()(_)()\n                  |  |                    ()       ()\n                  |  |                   ()  X   X ()\n                  |  |                   ()(\\  __  ()\n                  |  |                    ()(\\_____|)\n                  |  |                      __/ _ \\__\n                  |  |                      | \\( )/ |\n                  |  |                      |  \\_/  |\n                  |  |                      |   |   |\n                  |  |                      |   |   |\n                  |  |                      |   |   |\n                  |  |                      |___|___|\n      ____________|  |________________      |_______|\n     /            |  |                /|\n    /             |  |               / |\n   /              |__|              /  |\n  /                                /   |\n /                                /    |\n/________________________________/     |\n|                                |    /\n|                                |   /\n|                                |  /\n|                                | /\n|________________________________|/\n",
+	"                    ___________________________________\n                   /  _________________________) )_____)\n                  /  /  / /                    | |\n                  |  | / /                     | |\n                  |  |/ /                      | |\n                  |  | /                       | |\n                  |  |/                        | |\n                  |  |                      ()(_)()\n                  |  |                    ()       ()\n                  |  |                   ()  X   X ()\n                  |  |                   ()(\\  __  ()\n                  |  |                    ()(\\_____|)\n                  |  |                     ___/ _ \\__\n                  |  |                    /   \\( )/ |\n                  |  |                   /  |  \\_/  |\n                  |  |                   |  |   |   |\n                  |  |                   |  |   |   |\n                  |  |                   |  |   |   |\n                  |  |                   |__|___|___|\n      ____________|  |________________   |  |_______|\n     /            |  |                /|  WW\n    /             |  |               / |\n   /              |__|              /  |\n  /                                /   |\n /                                /    |\n/________________________________/     |\n|                                |    /\n|                                |   /\n|                                |  /\n|                                | /\n|________________________________|/\n",
+	"                    ___________________________________\n                   /  _________________________) )_____)\n                  /  /  / /                    | |\n                  |  | / /                     | |\n                  |  |/ /                      | |\n                  |  | /                       | |\n                  |  |/                        | |\n                  |  |                      ()(_)()\n                  |  |                    ()       ()\n                  |  |                   ()  X   X ()\n                  |  |                   ()(\\  __  ()\n                  |  |                    ()(\\_____|)\n                  |  |                     ___/ _ \\___\n                  |  |                    /   \\( )/   \\\n                  |  |                   /  |  \\_/  |  \\\n                  |  |                   |  |   |   |  |\n                  |  |                   |  |   |   |  |\n                  |  |                   |  |   |   |  |\n                  |  |                   |__|___|___|__|\n      ____________|  |________________   |  |_______|  |\n     /            |  |                /|  WW         WW\n    /             |  |               / |\n   /              |__|              /  |\n  /                                /   |\n /                                /    |\n/________________________________/     |\n|                                |    /\n|                                |   /\n|                                |  /\n|                                | /\n|________________________________|/\n",
+	"                    ___________________________________\n                   /  _________________________) )_____)\n                  /  /  / /                    | |\n                  |  | / /                     | |\n                  |  |/ /                      | |\n                  |  | /                       | |\n                  |  |/                        | |\n                  |  |                      ()(_)()\n                  |  |                    ()       ()\n                  |  |                   ()  X   X ()\n                  |  |                   ()(\\  __  ()\n                  |  |                    ()(\\_____|)\n                  |  |                     ___/ _ \\___\n                  |  |                    /   \\( )/   \\\n                  |  |                   /  |  \\_/  |  \\\n                  |  |                   |  |   |   |  |\n                  |  |                   |  |   |   |  |\n                  |  |                   |  |   |   |  |\n                  |  |                   |__|___|___|__|\n      ____________|  |________________   |  |_______|  |\n     /            |  |                /|  WW|   |    WW\n    /             |  |               / |    |   |\n   /              |__|              /  |    |   |\n  /                                /   |    |   |\n /                                /    |    |   |\n/________________________________/     |    |___|\n|                                |    /     /  /\n|                                |   /     /  /\n|                                |  /      |_/\n|                                | /\n|________________________________|/\n",
+	"                    ___________________________________\n                   /  _________________________) )_____)\n                  /  /  / /                    | |\n                  |  | / /       /\\ /\\         | |\n                  |  |/ /          V           | |          /\\ /\\\n                  |  | /                       | |            V\n                  |  |/                        | |\n                  |  |                      ()(_)()\n                  |  |                    ()       ()\n                  |  |     /\\ /\\         ()  X   X ()\n                  |  |       V           ()(\\  __  ()\n                  |  |                    ()(\\_____|)\n                  |  |                     ___/ _ \\___\n                  |  |                    /   \\( )/   \\\n                  |  |                   /  |  \\_/  |  \\\n                  |  |                   |  |   |   |  |\n                  |  |                   |  |   |   |  |\n                  |  |                   |  |   |   |  |\n                  |  |                   |__|___|___|__|\n      ____________|  |________________   |  |_______|  |\n     /            |  |                /|  WW|       |WW\n    /             |  |               / |    |   |   |\n   /              |__|              /  |    |   |   |\n  /                                /   |    |   |   |\n /                                /    |    |   |   |\n/________________________________/     |    |___|___|\n|                                |    /     /  / \\  \\\n|                                |   /     /  /   \\  \\\n|                                |  /      |_/     \\_|\n|                                | /\n|________________________________|/\n",
+};
 
 void checkPicsFile() {
 	char const* const dirname = STR(DATADIR) "/" PACKAGE;
 	struct stat st;
 	if(stat(dirname, &st) == 0) {
 		for(unsigned int i = 1 ; i <= 10 ; ++i) {
-			char filename[12];
-			sprintf(filename, STR(DATADIR) "/" PACKAGE "/%d.txt", i);
-			printf(STR(DATADIR) "/" PACKAGE "/%d.txt\n", i);
-			// Check if file exists
-			if(access(filename, F_OK) != -1) {
+			char filename[255];
+			sprintf(filename, "%s/%d.txt", dirname, i);
+			// Check if file does not exists
+			if(access(filename, F_OK)) {
 				havePicsFile = false;
 				return;
 			}
@@ -42,6 +58,34 @@ void checkPicsFile() {
 		havePicsFile = true;
 	} else
 		havePicsFile = false;
+}
+
+struct picture getPicture(short int n) {
+	if(havePicsFile) {
+		char filename[255];
+		sprintf(filename, STR(DATADIR) "/" PACKAGE "/%d.txt", n + 1);
+		FILE* f = fopen(filename, "r");
+
+		static char str[2048] = "";
+		// Reset the string
+		str[0] = '\0';
+		char line[65];
+		unsigned short int height = 0;
+		// Read the file and count the lines
+		while(fgets(line, 65, f) != NULL) {
+			strcat(str, line);
+			++height;
+		}
+
+		fclose(f);
+
+		struct picture re = { str, height };
+		return re;
+
+	} else {
+		struct picture re = { hardcodedPictures[n], 31 };
+		return re;
+	}
 }
 
 void goUpLine() {
@@ -129,23 +173,17 @@ int main(int const argc, char ** const argv) {
 	hiddenWord[wordLength] = '\0';
 
 	char triedLetters[26]  = "                          ";
-	triedLetters[25] = ' ';
 	unsigned int position = 0;
 
 	bool alreadyTried = false;
 	bool invalidCharacter = false;
 
 	checkPicsFile();
-	char filename[12] = "pics/nn.txt";
-	char ch;
 
 	while(!(win || lose)) {
-		sprintf(filename, "pics/%d.txt", 11 - remainingTries);
-		FILE* f = fopen(filename, "r");
 
-		while((ch = fgetc(f)) != EOF) {
-			putchar(ch);
-		}
+		struct picture pic = getPicture(10 - remainingTries);
+		fputs(pic.str, stdout);
 
 		if(alreadyTried)
 			printf("You already tried it!\n");
@@ -186,7 +224,7 @@ int main(int const argc, char ** const argv) {
 		else if(remainingTries == 0)
 			lose = 1;
 		else {
-			for(unsigned int i = 0 ; i <= 4 + 31 ; ++i) {
+			for(unsigned int i = 0 ; i <= 4 + pic.height ; ++i) {
 				goUpLine();
 			}
 			if(c == '\n')
