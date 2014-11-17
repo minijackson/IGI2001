@@ -3,7 +3,8 @@
 #include <sysexits.h>
 #include <string.h>
 
-#include "utils.h"
+#include "inc.h"
+#include "dict.h"
 
 unsigned int countWords(const char* const filename) {
 	FILE* f = fopen(filename, "r");
