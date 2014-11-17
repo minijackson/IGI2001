@@ -161,7 +161,7 @@ int main(int const argc, char ** const argv) {
 
 	bool win = 0;
 	bool lose = 0;
-	unsigned short int remainingTries = 10;
+	unsigned short int remainingAttempts = 10;
 
 	unsigned int wordsInFile = countWords(wordsFile);
 	char* const gameWord = searchWord(wordsFile, ranInt(wordsInFile));
@@ -182,7 +182,7 @@ int main(int const argc, char ** const argv) {
 
 	while(!(win || lose)) {
 
-		struct picture pic = getPicture(10 - remainingTries);
+		struct picture pic = getPicture(10 - remainingAttempts);
 		fputs(pic.str, stdout);
 
 		if(alreadyTried)
@@ -209,7 +209,7 @@ int main(int const argc, char ** const argv) {
 						hiddenWord[i] = c;
 				}
 			} else {
-				--remainingTries;
+				--remainingAttempts;
 			}
 			triedLetters[position] = c;
 			++position;
@@ -221,7 +221,7 @@ int main(int const argc, char ** const argv) {
 		}
 		if(!containsLetter(hiddenWord, '_', wordLength))
 			win = 1;
-		else if(remainingTries == 0)
+		else if(remainingAttempts == 0)
 			lose = 1;
 		else {
 			for(unsigned int i = 0 ; i <= 4 + pic.height ; ++i) {
