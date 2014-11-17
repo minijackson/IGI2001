@@ -1,3 +1,9 @@
+2012-11-13  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
+
+	* hangman2.c: Code refactoring into multiple files in
+	'utils' directory.
+
+
 2012-11-16  Rémi NICOLE  <remi.nicole@edu.esiee.fr>
 
 	Now installs default pictures of hanged man on the

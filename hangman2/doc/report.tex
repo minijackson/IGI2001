@@ -3,7 +3,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[french]{babel}
-\usepackage[]{amsmath}
+\usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{mathabx}
 \usepackage{fullpage}
@@ -68,9 +68,7 @@
 \paragraph{} In order to pick a random word in a file consisting of a single
 word per line, the file is first scanned to count the number of files ($n$),
 then a random number $k$ is picked in the $\ldbrack1;n\rdbrack$ interval.
-After that, the $k^{th}$ word of the file is picked and returned as a
-\lstinline[style=prog]|static| string (prevent the use of
-\lstinline[style=prog]|malloc|).
+After that, the $k^{th}$ word of the file is picked and returned.
 
 \subsection{Game word and hidden word}
 
@@ -84,11 +82,39 @@ game word and if found, any occurrences of this character will replace the
 corresponding underscore(s) in the hidden word. If not found, the player will
 lose one attempt.
 
+\subsection{Tried letters}
+
+\paragraph{} The string typed variable named \texttt{triedLetters} will
+contains in order the letter already tried (with or without success) and each
+time the user will input a character, the program will check that the letter
+was not already tried, meaning that the letter is not contained in the
+\texttt{triedLetters} variable. If it is contained, then the error message
+\texttt{You already tried it!} is displayed.
+
+\subsection{Endgame}
+
+\paragraph{} For the end game, two parameters are taken into account: the
+hidden word variable and the remaining attempts variable. If the hidden word is
+no more hidden, the player wins. Else if the remaining attempts is zero, then
+the player looses.
+
 \section{Details}
 
-\subsection{Console ``clear''}
+\subsection{Command line arguments}
 
-\paragraph{}
+\paragraph{} Command line arguments can be passed to the program. The
+\texttt{--h} and \texttt{----help} options will make the program display an
+help for the program command line usage and exit. The \texttt{--v} or
+\texttt{----version} options will display the version number of the program and
+exit. The \texttt{--d} or \texttt{----display} option takes one argument which
+is the dictionary file containing the words to pick from.
+
+\subsection{Console clear}
+
+\paragraph{} For each lines printed by the program each turn, the escape
+sequence code \lstinline[style=prog]|"\033[A\033[2K"| is printed which will
+	make the terminal cursor go one line up and any printed text after this
+	escape sequence code will be printed over these lines.
 
 \subsection{Invalid characters}
 
@@ -97,6 +123,13 @@ checked through the function \lstinline[style=prog]|validLetter| and display
 \texttt{Invalid character} if the character inputted is not a letter. If the
 letter inputted is a \lstinline[style=prog]|'\n'|, the console curser goes up
 one line more.
+
+\subsection{\texttt{malloc} aversion}
+
+\paragraph{} In order to prevent a \lstinline[style=prog]|malloc| from being
+used, a \lstinline[style=prog]|static| string is returned and reset each time
+the function is called by putting the \lstinline[style=prog]|'\0'| at the first
+character.
 
 \end{document}
 % vim: spell
