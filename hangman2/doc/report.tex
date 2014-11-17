@@ -7,6 +7,7 @@
 \usepackage{amsfonts}
 \usepackage{mathabx}
 \usepackage{fullpage}
+\usepackage{dirtree}
 \usepackage[usenames,dvipsnames]{color}
 \usepackage{listingsutf8}
 \usepackage[hidelinks]{hyperref}
@@ -59,6 +60,49 @@
 
 \maketitle
 
+\chapter{Directory tree of the project}
+
+\dirtree{%
+ .1 [root].
+   .2 configure.ac\DTcomment{Autoconf main configration file}.
+   .2 Makefile.am.
+   .2 src.
+     .3 Makefile.am.
+	 .3 hangman2\DTcomment{Executable}.
+	 .3 hangman2.c\DTcomment{Main source file}.
+	 .3 utils.
+	   .4 dict.c.
+	   .4 dict.h.
+	   .4 words.c.
+	   .4 words.h.
+	   .4 pics.c.
+	   .4 pics.h.
+	   .4 inc.h\DTcomment{Common \lstinline[style=prog]|##include| and \lstinline[style=prog]|##define|}.
+     .3 pics\DTcomment{Default pictures directory}.
+	   .4 1.txt.
+	   .4 2.txt.
+	   .4 3.txt.
+	   .4 4.txt.
+	   .4 5.txt.
+	   .4 6.txt.
+	   .4 7.txt.
+	   .4 8.txt.
+	   .4 9.txt.
+	   .4 10.txt.
+   .2 doc\DTcomment{Documentation directory}.
+     .3 Makefile.am.
+	 .3 report.tex.
+	 .3 report.pdf.
+   .2 NEWS.
+   .2 AUTHORS.
+   .2 COPYING.
+   .2 INSTALL.
+   .2 LICENSE.
+   .2 README.
+   .2 THANKS.
+   .2 ChangeLog.
+}
+
 \chapter{The Game}
 
 \section{Main game}
@@ -89,7 +133,7 @@ contains in order the letter already tried (with or without success) and each
 time the user will input a character, the program will check that the letter
 was not already tried, meaning that the letter is not contained in the
 \texttt{triedLetters} variable. If it is contained, then the error message
-\texttt{You already tried it!} is displayed.
+\lstinline[style=prog]|"You already tried it!"| is displayed.
 
 \subsection{Endgame}
 
@@ -107,7 +151,9 @@ the player looses.
 help for the program command line usage and exit. The \texttt{--v} or
 \texttt{----version} options will display the version number of the program and
 exit. The \texttt{--d} or \texttt{----display} option takes one argument which
-is the dictionary file containing the words to pick from.
+is the dictionary file containing the words to pick from. The header
+\texttt{unistd.h} is used in order to be able to make use of the
+\texttt{getopt} facility.
 
 \subsection{Console clear}
 
@@ -120,16 +166,17 @@ sequence code \lstinline[style=prog]|"\033[A\033[2K"| is printed which will
 
 \paragraph{} Each time the player inputs a character, the character inputted is
 checked through the function \lstinline[style=prog]|validLetter| and display
-\texttt{Invalid character} if the character inputted is not a letter. If the
-letter inputted is a \lstinline[style=prog]|'\n'|, the console curser goes up
-one line more.
+\lstinline[style=prog]|"Invalid character"| if the character inputted is not a
+letter.  If the letter inputted is a \lstinline[style=prog]|'\n'|, the console
+curser goes up one line more.
 
 \subsection{\texttt{malloc} aversion}
 
 \paragraph{} In order to prevent a \lstinline[style=prog]|malloc| from being
-used, a \lstinline[style=prog]|static| string is returned and reset each time
-the function is called by putting the \lstinline[style=prog]|'\0'| at the first
-character.
+used in the function \lstinline[style=prog]|searchWord| of the
+\texttt{utils/dict.c} file, a \lstinline[style=prog]|static| string is returned
+and reset each time the function is called by putting the
+\lstinline[style=prog]|'\0'| at the first character.
 
 \end{document}
 % vim: spell
