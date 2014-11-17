@@ -1,0 +1,102 @@
+\documentclass{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[]{amsmath}
+\usepackage{amsfonts}
+\usepackage{mathabx}
+\usepackage{fullpage}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{listingsutf8}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{gray}{gray}{0.70}
+
+\lstset{%
+	tabsize=4,
+	basicstyle=\small\ttfamily,
+	numberstyle=\scriptsize\ttfamily,
+	texcl=true,
+	extendedchars=true,
+	inputencoding=utf8/latin1
+}
+
+\lstdefinestyle{prog}{%
+	caption=Programme,
+	numbers=left,
+	frame=L,
+	language=c,
+	tabsize=4,
+	basicstyle=\small\ttfamily,
+	numberstyle=\scriptsize\ttfamily,
+	keywordstyle=\color{BlueViolet},
+	stringstyle=\color{Green},
+	commentstyle=\color{gray},
+	showstringspaces=false
+}
+
+\lstdefinestyle{output}{%
+	caption=Résultat,
+	frame=single,
+	belowcaptionskip=1\baselineskip,
+	breaklines=true
+}
+
+\lstdefinestyle{outfile}{%
+	caption=Fichier de sortie,
+	frame=shadowbox,
+	rulesepcolor=\color{gray},
+	belowcaptionskip=1\baselineskip,
+	breaklines=true
+}
+
+\author{Rémi \textsc{Nicole}}
+\title{Making of Hangman2}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\chapter{The Game}
+
+\section{Main game}
+
+\subsection{Picking a random word}
+
+\paragraph{} In order to pick a random word in a file consisting of a single
+word per line, the file is first scanned to count the number of files ($n$),
+then a random number $k$ is picked in the $\ldbrack1;n\rdbrack$ interval.
+After that, the $k^{th}$ word of the file is picked and returned as a
+\lstinline[style=prog]|static| string (prevent the use of
+\lstinline[style=prog]|malloc|).
+
+\subsection{Game word and hidden word}
+
+\paragraph{} Two sting variables are instantiated for the random word: one
+which is the random word (game word) and another which is originally composed
+of underscores (\texttt{\_}) only (hidden word). The second variable will be
+the text displayed to the player and will serve to check if the player won: if
+this string does not contains any underscores, then the player won. Each time
+the player inputs a character, the inputted character is searched through the
+game word and if found, any occurrences of this character will replace the
+corresponding underscore(s) in the hidden word. If not found, the player will
+lose one attempt.
+
+\section{Details}
+
+\subsection{Console ``clear''}
+
+\paragraph{}
+
+\subsection{Invalid characters}
+
+\paragraph{} Each time the player inputs a character, the character inputted is
+checked through the function \lstinline[style=prog]|validLetter| and display
+\texttt{Invalid character} if the character inputted is not a letter. If the
+letter inputted is a \lstinline[style=prog]|'\n'|, the console curser goes up
+one line more.
+
+\end{document}
+% vim: spell
