@@ -4,3 +4,5 @@ unsigned int countWords(const char* const filename);
 unsigned int ranInt(const unsigned int n);
 char* searchWord(const char* const str, const unsigned int n);
 char* ranWord(const char* const filename, char* const word);
+size_t maxSizeInFile(char* filename);
+size_t* histogram(char* filename);

@@ -20,6 +20,8 @@ unsigned int countWords(const char* const filename) {
 		++n;
 	}
 
+	fclose(f);
+
 	// Count two times the last word
 	return n - 1;
 }
@@ -45,6 +47,8 @@ char* searchWord(const char* const filename, const unsigned int n) {
 	for(unsigned int i = 0 ; i < n ; ++i)
 		fscanf(f, "%s", re);
 
+	fclose(f);
+
 	return re;
 }
 
@@ -53,4 +57,48 @@ char* ranWord(const char* const filename, char* const word) {
 	strcpy(word, re);
 	free(re);
 	return word;
+}
+
+size_t maxSizeInFile(char* filename) {
+	FILE* f = fopen(filename, "r");
+
+	if(f == NULL) {
+		fprintf(stderr, "Cannot open file in maxSizeInFile.\n");
+		exit(EX_NOINPUT);
+	}
+
+	size_t max = 0;
+	char word[30];
+	while(fgets(word, 30, f) != NULL) {
+		size_t count = strlen(word);
+		if(count > max)
+			max = count;
+	}
+
+	fclose(f);
+
+	// Remove the UNIX end of line
+	return max - 1;
+}
+
+size_t* histogram(char* filename) {
+	FILE* f = fopen(filename, "r");
+
+	if(f == NULL) {
+		fprintf(stderr, "Cannot open file in filename.\n");
+		exit(EX_NOINPUT);
+	}
+
+	size_t tabSize = maxSizeInFile(filename) + 1;
+
+	size_t* hist = calloc(tabSize, sizeof(size_t));
+	char word[30];
+	while(fgets(word, 40, f) != NULL) {
+		++hist[strlen(word) - 1];
+	}
+
+	hist[0] = tabSize;
+
+	fclose(f);
+	return hist;
 }

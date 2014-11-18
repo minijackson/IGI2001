@@ -7,9 +7,6 @@ RELEASE_CFLAGS = -O2
 SOURCES        = $(wildcard *.c)
 EXECS          = $(SOURCES:%.c= %.bin)
 DEPS           = lib/utils.c
-X11LIB         = `pkg-config --libs x11`
-X11FLAGS       = `pkg-config --cflags x11`
-MATHFLAGS      = -lm
 
 all: debug
 
@@ -22,7 +19,7 @@ profile: CFLAGS += $(PROFILE_CFLAGS)
 
 doc: outs rapport.pdf
 
-.o: .c
+%.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 %.bin: %.o $(DEPS)
